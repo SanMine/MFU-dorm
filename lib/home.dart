@@ -9,7 +9,7 @@ class HomePage extends StatelessWidget {
         title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.menu),
+          icon: const Icon(Icons.menu),
           onPressed: () {
             // Handle hamburger menu action
           },
@@ -106,8 +106,8 @@ class FunctionContainer extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
+        decoration: const BoxDecoration(
+          color:Colors.white,
           boxShadow: [
             BoxShadow(
               color: Color(0x40000000),
