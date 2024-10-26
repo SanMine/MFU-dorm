@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "703399860851",
+    "project_id": "mfu-dorm-7bb09",
+    "storage_bucket": "mfu-dorm-7bb09.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:703399860851:android:48f29d11701a1ddafd2806",
+        "android_client_info": {
+          "package_name": "com.example.mfu_dorm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5EYCImZfSPRn02SkTop_5B2Ktqg1pyKo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
