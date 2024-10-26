@@ -13,7 +13,7 @@ Future<void> importCSVToFirestore() async {
 
   if (result != null) {
     File file = File(result.files.single.path!);
-    
+
     // Step 2: Read and parse the CSV file
     final input = file.openRead();
     final fields = await input
@@ -23,22 +23,29 @@ Future<void> importCSVToFirestore() async {
 
     // Step 3: Convert each row to a map and add it to Firestore
     for (var i = 1; i < fields.length; i++) {
-      Map<String, dynamic> studentData = {
-        "firstName": fields[i][0],
-        "lastName": fields[i][1],
-        "id": fields[i][2],
-        "phone": fields[i][3],
-        "email": fields[i][4],
-        "domitory": fields[i][5],
-        "room": fields[i][6],
-       
-        // "checkIn": fields[i][6],
-        // "checkOut": fields[i][7],
-        //"date": fields[i][8],
-      };
+      if (fields[i].length >= 10) {
+        Map<String, dynamic> studentData = {
+          "firstName": fields[i][0],
+          "lastName": fields[i][1],
+          "id": fields[i][2],
+          "phone": fields[i][3],
+          "email": fields[i][4],
+          "dormitory": fields[i][5],
+          "room": fields[i][6],
+          "password": fields[i][7],
+          // "checkIn": fields[i][7],
+          // "checkOut": fields[i][8],
+          // "date": fields[i][9],
+        };
 
-      // Add the student data to Firestore
-      await FirebaseFirestore.instance.collection('students').add(studentData);
+        // Debug print
+        print("Adding student: $studentData");
+
+        // Add the student data to Firestore
+        await FirebaseFirestore.instance.collection('students').add(studentData);
+      } else {
+        print("Row $i does not have enough columns: ${fields[i]}");
+      }
     }
   } else {
     print("No file selected");

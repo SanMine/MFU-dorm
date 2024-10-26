@@ -8,6 +8,7 @@ import 'noti.dart';
 import 'qr.dart';
 import 'room.dart';
 import 'service.dart';
+import 'login.dart'; // Import your login.dart file
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +22,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'My App',
-      home: MainPage(),  // Use MainPage for navigation
+      initialRoute: '/', // Set initial route to '/'
+      routes: {
+        '/': (context) => LoginPage(), // Set LoginPage as the initial route
+        '/home': (context) => MainPage(), // Define home page route
+      },
     );
   }
 }

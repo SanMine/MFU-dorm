@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyAI0ZBgps1kYPVyZaInygXhRuxHMILMur4</string>
+	<string>AIzaSyC_5K8q6ElCoSpQpuNb3QNoRNVsZeour_8</string>
 	<key>GCM_SENDER_ID</key>
-	<string>703399860851</string>
+	<string>992727792587</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.mfuDorm</string>
 	<key>PROJECT_ID</key>
-	<string>mfu-dorm-7bb09</string>
+	<string>dorm-95e95</string>
 	<key>STORAGE_BUCKET</key>
-	<string>mfu-dorm-7bb09.appspot.com</string>
+	<string>dorm-95e95.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:703399860851:ios:fe9fe1145ceaebbbfd2806</string>
+	<string>1:992727792587:ios:5e18674f1147f56be8544e</string>
 </dict>
 </plist>
