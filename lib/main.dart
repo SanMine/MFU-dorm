@@ -1,72 +1,83 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'home.dart'; // Import your home.dart file
-import 'canteen.dart'; // Import additional pages
-import 'chat.dart';
-import 'map.dart';
-import 'noti.dart';
-import 'qr.dart';
-import 'room.dart';
-import 'service.dart';
-import 'login.dart'; // Import your login.dart file
+import 'package:mfu_dorm/signup.dart';
+import 'home.dart';
+import 'login.dart'; // User LoginPage
+import 'qr.dart'; // QR code page
+import 'chat.dart'; // Chat page
+import 'noti.dart'; // Notifications page
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initializes Firebase
-  runApp(MyApp());
+  await Firebase.initializeApp(); // Initialize Firebase
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'My App',
-      initialRoute: '/', // Set initial route to '/'
+      title: 'MFU Dormitory App',
+      initialRoute: '/login',
       routes: {
-        '/': (context) => LoginPage(), // Set LoginPage as the initial route
-        '/home': (context) => MainPage(), // Define home page route
+       '/login': (context) => LoginPage(), // Regular user login route
+        '/home': (context) => const MainPage(isAdmin: false), // Home page for regular users
+      
       },
     );
   }
 }
 
 class MainPage extends StatefulWidget {
+  final bool isAdmin;
+
+  const MainPage({Key? key, required this.isAdmin}) : super(key: key);
+
   @override
   _MainPageState createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0; // Track the selected index
-  late List<Widget> _pages; // Declare the pages variable
+  int _selectedIndex = 0;
+  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the pages list here
+    _initializePages();
+  }
+
+  void _initializePages() {
     _pages = [
-      HomePage(onPageSelected: (index) {
-        // Update the selected index based on the HomePage navigation
-        setState(() {
-          _selectedIndex = index;
-        });
-      }),
-      QrPage(),
-      ChatPage(),
-      NotiPage(),
+      HomePage(
+        isAdmin: widget.isAdmin,
+        onPageSelected: _onPageSelected,
+      ),
+      QrPage(studentId: ''),
+      const ChatPage(),
+      const NotiPage(),
     ];
   }
 
-  void _onItemTapped(int index) {
+  void _onPageSelected(int index) {
     setState(() {
-      _selectedIndex = index; // Update the selected index
+      _selectedIndex = index;
+    });
+  }
+
+  void _onBottomNavigationTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex], // Display the selected page
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
@@ -86,10 +97,10 @@ class _MainPageState extends State<MainPage> {
             label: 'Notifications',
           ),
         ],
-        currentIndex: _selectedIndex, // Set the current index
-        selectedItemColor: Colors.black, // Color for selected item
-        unselectedItemColor: Colors.grey, // Color for unselected items
-        onTap: _onItemTapped, // Handle tap event
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
+        onTap: _onBottomNavigationTapped,
       ),
     );
   }
