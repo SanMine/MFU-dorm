@@ -12,29 +12,29 @@ import 'csv_import.dart'; // Import CSV import function
 
 class HomePage extends StatefulWidget {
   final Function(int) onPageSelected; // Function to navigate
+  final bool isAdmin; // Flag to indicate if the user is an admin
 
-  const HomePage({Key? key, required this.onPageSelected}) : super(key: key);
+  const HomePage({Key? key, required this.onPageSelected, this.isAdmin = false}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  bool _isMenuVisible = false; // Track if the menu is visible
-  late AnimationController _menuController; // Controller for the menu animation
-  late Animation<Offset> _menuAnimation; // Animation for the menu slide
+  late AnimationController _menuController; // Animation controller for menu
+  late Animation<Offset> _menuAnimation; // Animation for sliding the menu
 
   @override
   void initState() {
     super.initState();
     _menuController = AnimationController(
-      duration: const Duration(milliseconds: 500), // Set duration for opening and closing
+      duration: const Duration(milliseconds: 400), // Slightly faster for a smooth feel
       vsync: this,
     );
 
     _menuAnimation = Tween<Offset>(
-      begin: const Offset(-1.0, 0.0), // Start off-screen to the left
-      end: Offset.zero, // End at the normal position
+      begin: const Offset(-1.0, 0.0),
+      end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _menuController,
       curve: Curves.easeInOut,
@@ -48,35 +48,29 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void _toggleMenu() {
-    setState(() {
-      _isMenuVisible = !_isMenuVisible; // Toggle menu visibility
-      if (_isMenuVisible) {
-        _menuController.forward(); // Show the menu
-      } else {
-        _menuController.reverse(); // Hide the menu
-      }
-    });
+    if (_menuController.isDismissed) {
+      _menuController.forward();
+    } else {
+      _menuController.reverse();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: _toggleMenu, // Toggle menu visibility
+          icon: const Icon(Icons.menu),
+          onPressed: _toggleMenu,
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.file_upload), // Icon for CSV import
-            onPressed: () async {
-              await importCSVToFirestore(); // Trigger the CSV import function
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('CSV data imported to Firestore')),
-              );
-            },
+            icon: const Icon(Icons.file_upload),
+            onPressed: _importCSV,
           ),
         ],
       ),
@@ -87,69 +81,106 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.yellow,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x40000000),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                    borderRadius: BorderRadius.all(Radius.circular(20)), // Border radius applied here
-                  ),
-                  width: double.infinity, // Make it responsive
-                  height: 150,
-                  child: const Center(
-                    child: Text(
-                      'IMPORTANT ANNOUNCEMENT!',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
+                _buildAnnouncementSection(),
                 const SizedBox(height: 20),
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    children: [
-                      FunctionContainer(label: 'My Room', onTap: () {
-                        widget.onPageSelected(0); // Navigate to My Room
-                      }, icon: Icons.bed_rounded),
-                      FunctionContainer(label: 'Map', onTap: () {
-                        widget.onPageSelected(1); // Navigate to Map
-                      }, icon: Icons.map),
-                      FunctionContainer(label: 'Canteen', onTap: () {
-                        widget.onPageSelected(2); // Navigate to Canteen
-                      }, icon: Icons.restaurant),
-                      FunctionContainer(label: 'Services', onTap: () {
-                        widget.onPageSelected(3); // Navigate to Services
-                      }, icon: Icons.build),
-                    ],
-                  ),
-                ),
+                _buildFeatureGrid(screenWidth),
               ],
             ),
           ),
-          // Overlay Menu
-          SlideTransition(
-            position: _menuAnimation,
-            child: MenuPage(
-              onClose: () {
-                setState(() {
-                  _isMenuVisible = false; // Set menu visibility to false
-                });
-                _menuController.reverse(); // Close the menu with animation
-              },
+          _buildOverlayMenu(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementSection() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.yellowAccent,
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      width: double.infinity,
+      height: 150,
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(Icons.announcement, size: 40, color: Colors.black54),
+          ),
+          Expanded(
+            child: Text(
+              'IMPORTANT ANNOUNCEMENT!',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildFeatureGrid(double screenWidth) {
+    return Expanded(
+      child: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: screenWidth < 600 ? 2 : 3, // Responsive layout
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 20,
+        ),
+        itemCount: _features.length,
+        itemBuilder: (context, index) {
+          final feature = _features[index];
+          return FunctionContainer(
+            label: feature['label'],
+            icon: feature['icon'],
+            onTap: () => widget.onPageSelected(index),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOverlayMenu() {
+    return SlideTransition(
+      position: _menuAnimation,
+      child: MenuPage(
+        onClose: _toggleMenu, // Close menu with animation
+      ),
+    );
+  }
+
+  Future<void> _importCSV() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Importing CSV data...')),
+    );
+
+    try {
+      await importCSVToFirestore('userId'); // Make sure 'userId' is provided
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('CSV data imported to Firestore')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to import CSV: $e')),
+      );
+    }
+  }
 }
+
+// Feature list for GridView
+const List<Map<String, dynamic>> _features = [
+  {'label': 'My Room', 'icon': Icons.bed_rounded},
+  {'label': 'Map', 'icon': Icons.map},
+  {'label': 'Canteen', 'icon': Icons.restaurant},
+  {'label': 'Services', 'icon': Icons.build},
+  // Add other features as needed
+];
 
 class FunctionContainer extends StatelessWidget {
   final String label;
@@ -163,23 +194,23 @@ class FunctionContainer extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: Color(0x40000000),
               blurRadius: 4,
               spreadRadius: 1,
             ),
           ],
-          borderRadius: BorderRadius.all(Radius.circular(20)), // Border radius applied here
+          borderRadius: BorderRadius.circular(20),
         ),
         width: 150,
         height: 150,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.blueAccent), // Icon with color
+            Icon(icon, size: 40, color: Colors.blueAccent),
             const SizedBox(height: 10),
             Text(label, style: TextStyleComponent.bodyText),
           ],
