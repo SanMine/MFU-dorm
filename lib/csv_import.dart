@@ -28,7 +28,7 @@ Future<void> importCSVToFirestore(String userId) async {
 
       // Step 3: Validate and add each row to Firestore
       for (var i = 1; i < fields.length; i++) { // Start from 1 to skip header
-        if (fields[i].length >= 10) {
+        if (fields[i].length >= 7) {
           try {
             String studentId = fields[i][2]?.toString() ?? '';
             Map<String, dynamic> studentData = {
@@ -39,7 +39,7 @@ Future<void> importCSVToFirestore(String userId) async {
               "email": fields[i][4]?.toString() ?? '',
               "dormitory": fields[i][5]?.toString() ?? '',
               "room": fields[i][6]?.toString() ?? '',
-              // "password": fields[i][7]?.toString() ?? '',
+            
             };
 
             // Create a reference for each student using their studentId

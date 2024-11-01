@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
@@ -11,33 +10,11 @@ class ScannerPage extends StatefulWidget {
 }
 
 class _ScannerPageState extends State<ScannerPage> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
   String scanResult = "";
   String checkInOrOut = "Check In"; // Default option
 
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller?.pauseCamera();
-    }
-    controller?.resumeCamera();
-  }
-
-  void onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        scanResult = scanData.code!;
-        _processScanResult(scanResult);
-      });
-    });
-  }
-
   void _processScanResult(String result) async {
     // Assuming the QR code returns JSON data
-    // Parse the result and save to Firestore
     Map<String, dynamic> data = {}; // Parse the result into a Map
 
     // Collect data
@@ -71,12 +48,6 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -86,9 +57,16 @@ class _ScannerPageState extends State<ScannerPage> {
         children: [
           Expanded(
             flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: onQRViewCreated,
+            child: MobileScanner(
+              onDetect: (BarcodeCapture capture) {
+                final String? code = capture.barcodes.first.rawValue;
+                if (code != null) {
+                  setState(() {
+                    scanResult = code;
+                    _processScanResult(scanResult);
+                  });
+                }
+              },
             ),
           ),
           Expanded(
