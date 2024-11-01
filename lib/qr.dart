@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class QRPage extends StatelessWidget {
+  const QRPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,8 +14,7 @@ class QRPage extends StatelessWidget {
               image: DecorationImage(
                 image: AssetImage('assets/images/dorm.png'), // Background image
                 fit: BoxFit.cover,
-                alignment:
-                    Alignment.bottomRight, // Align the image to the bottom
+                alignment: Alignment.bottomRight, // Align the image to the bottom
               ),
             ),
           ),
@@ -22,27 +23,7 @@ class QRPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Custom Back Button
-                const SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow[200],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context); // Back action
-                    },
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    label: const Text('Back',
-                        style: TextStyle(color: Colors.black)),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                // QR Code and Info
+                const SizedBox(height: 30), // Custom Back Button spacing
                 Expanded(
                   child: Center(
                     child: Container(
@@ -54,20 +35,20 @@ class QRPage extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
                             blurRadius: 10,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // User Image
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10.0),
+                          // User Image (Circular)
+                          ClipOval(
                             child: Image.asset(
                               'assets/images/mole.jpeg', // User's image
                               width: 80,
                               height: 80,
+                              fit: BoxFit.cover, // Fill the circular area
                             ),
                           ),
                           const SizedBox(height: 10),

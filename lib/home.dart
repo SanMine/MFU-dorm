@@ -1,8 +1,64 @@
 import 'package:flutter/material.dart';
-import 'style.dart'; // Import your style.dart file
+import 'package:mfu_dorm/csv_import.dart';
+import 'canteen.dart';
+import 'chat.dart';
+import 'map.dart';
+import 'noti.dart';
 import 'qr.dart';
+import 'room.dart';
+import 'service.dart';
+import 'style.dart'; // Import your style.dart file
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  final Function(int) onPageSelected; // Function to navigate
+
+  const HomePage({super.key, required this.onPageSelected});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  bool _isMenuVisible = false; // Track if the menu is visible
+  late AnimationController _menuController; // Controller for the menu animation
+  late Animation<Offset> _menuAnimation; // Animation for the menu slide
+
+  @override
+  void initState() {
+    super.initState();
+    _menuController = AnimationController(
+      duration: const Duration(
+          milliseconds: 500), // Set duration for opening and closing
+      vsync: this,
+    );
+
+    _menuAnimation = Tween<Offset>(
+      begin: const Offset(-1.0, 0.0), // Start off-screen to the left
+      end: Offset.zero, // End at the normal position
+    ).animate(CurvedAnimation(
+      parent: _menuController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _menuController.dispose();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    setState(() {
+      _isMenuVisible = !_isMenuVisible; // Toggle menu visibility
+      if (_isMenuVisible) {
+        _menuController.forward(); // Show the menu
+      } else {
+        _menuController.reverse(); // Hide the menu
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,11 +66,20 @@ class HomePage extends StatelessWidget {
         title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            // Handle hamburger menu action
-          },
+          icon: const Icon(Icons.menu),
+          onPressed: _toggleMenu, // Toggle menu visibility
         ),
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.file_upload), // Icon for CSV import
+        //     onPressed: () async {
+        //       await importCSVToFirestore(); // Trigger the CSV import function
+        //       ScaffoldMessenger.of(context).showSnackBar(
+        //         const SnackBar(content: Text('CSV data imported to Firestore')),
+        //       );
+        //     },
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -80,40 +145,6 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue), // Color added to icon
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon:
-                Icon(Icons.qr_code, color: Colors.green), // Color added to icon
-            label: 'QR Code',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.orange), // Color added to icon
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications,
-                color: Colors.red), // Color added to icon
-            label: 'Notifications',
-          ),
-        ],
-        // Add navigation handling
-        onTap: (index) {
-          if (index == 1) {
-            // Navigate to QR Page
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      QRPage()), // Push QRPage when QR icon is clicked
-            );
-          }
-        },
-      ),
     );
   }
 }
@@ -124,15 +155,17 @@ class FunctionContainer extends StatelessWidget {
   final VoidCallback onTap;
 
   const FunctionContainer(
-      {Key? key, required this.label, required this.icon, required this.onTap})
-      : super(key: key);
+      {super.key,
+      required this.label,
+      required this.icon,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
@@ -151,7 +184,7 @@ class FunctionContainer extends StatelessWidget {
           children: [
             // Add your icons or images here with color
             Icon(icon, size: 40, color: Colors.blueAccent), // Icon with color
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(label, style: TextStyleComponent.bodyText),
           ],
         ),
