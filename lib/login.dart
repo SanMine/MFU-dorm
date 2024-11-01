@@ -3,6 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mfu_dorm/signup.dart';
 
 class LoginPage extends StatefulWidget {
+  final Function(BuildContext, bool, String, String) onLogin; // Updated callback to include userId and studentId
+
+  const LoginPage({Key? key, required this.onLogin}) : super(key: key);
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -22,12 +26,14 @@ class _LoginPageState extends State<LoginPage> {
     String inputId = _idController.text.trim();
     String inputPassword = _passwordController.text.trim();
     bool isAdmin = false;
+    String userId = ''; // Initialize userId
+    String studentId = ''; // Initialize studentId
 
     try {
       // First check if the inputId corresponds to an admin
       QuerySnapshot adminQuerySnapshot = await FirebaseFirestore.instance
           .collection('adminAccounts')
-          .where('id', isEqualTo: inputId) // Use a query to find the document
+          .where('id', isEqualTo: inputId)
           .get();
 
       if (adminQuerySnapshot.docs.isNotEmpty) {
@@ -36,12 +42,9 @@ class _LoginPageState extends State<LoginPage> {
         String firestorePassword = adminSnapshot.get('password');
         if (inputPassword == firestorePassword) {
           isAdmin = true; // User is admin
-          // Navigate to home page
-          Navigator.pushReplacementNamed(
-            context,
-            '/home',
-            arguments: isAdmin, // Pass isAdmin status to home page
-          );
+          userId = adminSnapshot.id; // Get admin userId
+          // Show Snackbar for admin login
+          _showSnackbar('Logged in as Admin');
         } else {
           setState(() {
             _message = 'Login unsuccessful. Check your ID and password.';
@@ -51,11 +54,11 @@ class _LoginPageState extends State<LoginPage> {
         // If not admin, check the user account
         DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
             .collection('user')
-            .doc('userId') // Replace 'userId' with actual user document ID if needed
+            .doc('userId') // Use the inputId directly
             .collection('ID')
             .doc(inputId)
             .collection('accounts')
-            .doc('userId') // Adjust as necessary
+            .doc('userId') // Use the inputId here as well
             .get();
 
         if (userSnapshot.exists) {
@@ -63,11 +66,11 @@ class _LoginPageState extends State<LoginPage> {
 
           if (inputPassword == firestorePassword) {
             // Successful login as student
-            Navigator.pushReplacementNamed(
-              context,
-              '/home',
-              arguments: isAdmin, // Pass isAdmin status to home page
-            );
+            isAdmin = false; // User is a student
+            userId = inputId; // Get student userId
+            studentId = inputId; // Assuming studentId is the same as inputId
+            // Show Snackbar for student login
+            _showSnackbar('Logged in as Student');
           } else {
             setState(() {
               _message = 'Login unsuccessful. Check your ID and password.';
@@ -79,6 +82,11 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
       }
+
+      // Navigate to home page if login was successful
+      if (_message.isEmpty) {
+        widget.onLogin(context, isAdmin, userId, studentId); // Pass the isAdmin status and IDs to MainPage
+      }
     } catch (e) {
       setState(() {
         _message = 'Error: ${e.toString()}';
@@ -88,6 +96,15 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
     }
+  }
+
+  // Function to show snackbar
+  void _showSnackbar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -126,14 +143,12 @@ class _LoginPageState extends State<LoginPage> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: screenHeight * 0.1),
-
                   _buildTextField(
                     controller: _idController,
                     labelText: 'Student/Admin ID',
                     icon: Icons.person,
                   ),
                   SizedBox(height: screenHeight * 0.02),
-
                   _buildTextField(
                     controller: _passwordController,
                     labelText: 'Password',
@@ -141,33 +156,29 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: true,
                   ),
                   SizedBox(height: screenHeight * 0.03),
-
                   _buildActionButton(
                     text: 'Login',
                     color: const Color(0xFF4B7BFA),
-                    onPressed: _login,
+                    onPressed: _isLoading ? null : _login, // Disable if loading
                   ),
                   SizedBox(height: screenHeight * 0.02),
-
-                  // Added Sign Up Button
                   _buildActionButton(
-                  text: 'Sign Up',
-                  color: const Color(0xFF4B7BFA),
-                  onPressed: () {
-                    // Pass userId and studentId when navigating to SignupPage
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SignupPage(
-                          userId: 'userId', // Replace with the actual userId
-                          studentId: 'studentId', // Replace with the actual studentId
+                    text: 'Sign Up',
+                    color: const Color(0xFF4B7BFA),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SignupPage(
+                            // Update this with actual userId and studentId if necessary
+                            userId: 'userId', 
+                            studentId: 'studentId',
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
                   SizedBox(height: screenHeight * 0.02),
-
                   Text(
                     _message,
                     style: TextStyle(
@@ -175,7 +186,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.02),
-
                   TextButton(
                     onPressed: () {
                       // Implement password recovery
@@ -230,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildActionButton({
     required String text,
     required Color color,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;

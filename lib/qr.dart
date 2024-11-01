@@ -2,27 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class QrPage extends StatelessWidget {
+class QrPage extends StatefulWidget {
+  final String userId;
   final String studentId;
 
-  QrPage({required this.studentId});
+  const QrPage({Key? key, required this.userId, required this.studentId}) : super(key: key);
 
-  Future<Map<String, dynamic>?> fetchStudentData(String id) async {
+  @override
+  _QrPageState createState() => _QrPageState();
+}
+
+class _QrPageState extends State<QrPage> {
+  Map<String, dynamic>? studentData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudentData();
+  }
+
+  Future<void> _fetchStudentData() async {
     try {
-      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+      DocumentSnapshot studentDoc = await FirebaseFirestore.instance
+          .collection('user')
+          .doc('userId')
+          .collection('ID')
+          .doc(widget.studentId)
+          .collection('accounts')
+          .doc('userId')
           .collection('students')
-          .doc(id)
+          .doc(widget.studentId)
           .get();
 
-      if (snapshot.exists) {
-        return snapshot.data() as Map<String, dynamic>?;
+      if (studentDoc.exists) {
+        setState(() {
+          studentData = studentDoc.data() as Map<String, dynamic>?;
+          isLoading = false;
+        });
       } else {
-        print("Student not found");
-        return null;
+        setState(() {
+          studentData = null;
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print("Error fetching student data: $e");
-      return null;
+      setState(() {
+        studentData = null;
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching student data: $e")),
+      );
     }
   }
 
@@ -30,47 +61,53 @@ class QrPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Student QR Code'),
+        title: const Text("Student QR Code"),
+        backgroundColor: Colors.blueAccent, // Set your desired color
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: fetchStudentData(studentId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return Center(child: Text("No student data found"));
-          } else {
-            final studentData = snapshot.data!;
-            String qrData = 'firstName: ${studentData['firstName']}, '
-                            'lastName: ${studentData['lastName']}, '
-                            'id: ${studentData['id']}, '
-                            'phone: ${studentData['phone']}, '
-                            'email: ${studentData['email']}, '
-                            'Dormitory: ${studentData['Dormitory']}, '
-                            'room: ${studentData['room']}';
-
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // QrImage(
-                  //   data: qrData,
-                  //   version: QrVersions.auto,
-                  //   size: 200.0,
-                  // ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Scan the QR code above',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
+      body: Center(
+        child: isLoading
+            ? const CircularProgressIndicator()
+            : studentData == null
+                ? const Text("No student data available.")
+                : _buildQrCodePage(),
       ),
     );
+  }
+
+  Widget _buildQrCodePage() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Student Image (Placeholder)
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: NetworkImage("https://example.com/path/to/profile/image.jpg"), // Replace with actual image URL
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "${studentData!['firstName']} ${studentData!['lastName']}",
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          QrImageView(
+            data: _generateQrData(),
+            version: QrVersions.auto,
+            size: 200.0,
+          ),
+          const SizedBox(height: 20),
+          Text("Student ID: ${studentData!['id']}", style: const TextStyle(fontSize: 16)),
+          Text("Dormitory: ${studentData!['dormitory']}", style: const TextStyle(fontSize: 16)),
+          Text("Room: ${studentData!['room']}", style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  String _generateQrData() {
+    return studentData != null
+        ? '{"name": "${studentData!['firstName']} ${studentData!['lastName']}", "id": "${studentData!['id']}", "email": "${studentData!['email']}", "phone": "${studentData!['phone']}", "dormitory": "${studentData!['dormitory']}", "room": "${studentData!['room']}"}'
+        : 'No data available';
   }
 }
