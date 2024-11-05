@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mfu_dorm/signup.dart';
 
 class LoginPage extends StatefulWidget {
-  final Function(BuildContext, bool, String, String) onLogin; // Updated callback to include userId and studentId
+  final Function(BuildContext, bool, String, String) onLogin;
 
   const LoginPage({Key? key, required this.onLogin}) : super(key: key);
 
@@ -26,24 +26,22 @@ class _LoginPageState extends State<LoginPage> {
     String inputId = _idController.text.trim();
     String inputPassword = _passwordController.text.trim();
     bool isAdmin = false;
-    String userId = ''; // Initialize userId
-    String studentId = ''; // Initialize studentId
+    String userId = '';
+    String studentId = '';
 
     try {
-      // First check if the inputId corresponds to an admin
-      QuerySnapshot adminQuerySnapshot = await FirebaseFirestore.instance
+      // First, check if the input ID corresponds to an admin
+      DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
           .collection('adminAccounts')
-          .where('id', isEqualTo: inputId)
+          .doc(inputId) // Using inputId as the document ID
           .get();
 
-      if (adminQuerySnapshot.docs.isNotEmpty) {
-        // Check admin password
-        DocumentSnapshot adminSnapshot = adminQuerySnapshot.docs.first;
+      if (adminSnapshot.exists) {
+        // Verify admin password
         String firestorePassword = adminSnapshot.get('password');
         if (inputPassword == firestorePassword) {
-          isAdmin = true; // User is admin
-          userId = adminSnapshot.id; // Get admin userId
-          // Show Snackbar for admin login
+          isAdmin = true;
+          userId = adminSnapshot.id;
           _showSnackbar('Logged in as Admin');
         } else {
           setState(() {
@@ -51,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
       } else {
-        // If not admin, check the user account
+        // If not an admin, check the user collection for students
         DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
             .collection('user')
             .doc('userId') // Use the inputId directly
@@ -61,15 +59,14 @@ class _LoginPageState extends State<LoginPage> {
             .doc('userId') // Use the inputId here as well
             .get();
 
+
         if (userSnapshot.exists) {
           String firestorePassword = userSnapshot.get('password');
 
           if (inputPassword == firestorePassword) {
-            // Successful login as student
-            isAdmin = false; // User is a student
-            userId = inputId; // Get student userId
-            studentId = inputId; // Assuming studentId is the same as inputId
-            // Show Snackbar for student login
+            isAdmin = false;
+            userId = inputId;
+            studentId = inputId;
             _showSnackbar('Logged in as Student');
           } else {
             setState(() {
@@ -83,9 +80,9 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
 
-      // Navigate to home page if login was successful
+      // Navigate to the main page if login was successful
       if (_message.isEmpty) {
-        widget.onLogin(context, isAdmin, userId, studentId); // Pass the isAdmin status and IDs to MainPage
+        widget.onLogin(context, isAdmin, userId, studentId);
       }
     } catch (e) {
       setState(() {
@@ -159,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
                   _buildActionButton(
                     text: 'Login',
                     color: const Color(0xFF4B7BFA),
-                    onPressed: _isLoading ? null : _login, // Disable if loading
+                    onPressed: _isLoading ? null : _login,
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   _buildActionButton(
@@ -170,7 +167,6 @@ class _LoginPageState extends State<LoginPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => SignupPage(
-                            // Update this with actual userId and studentId if necessary
                             userId: 'userId', 
                             studentId: 'studentId',
                           ),

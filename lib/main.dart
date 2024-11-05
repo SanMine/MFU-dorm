@@ -75,8 +75,8 @@ class _MainPageState extends State<MainPage> {
       ),
       if (widget.isAdmin) const ScannerPage(), // Show ScannerPage for admin
       if (!widget.isAdmin) QrPage(userId: widget.userId, studentId: widget.studentId), // Show QR code for students
-      const ChatPage(),
-      const NotiPage(),
+      ChatPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
+      NotiPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
     ];
   }
 
