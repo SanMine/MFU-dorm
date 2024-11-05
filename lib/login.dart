@@ -32,8 +32,10 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // First, check if the input ID corresponds to an admin
       DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
-          .collection('adminAccounts')
+          .collection('admin')
           .doc(inputId) // Using inputId as the document ID
+          .collection('account')
+          .doc(inputId)
           .get();
 
       if (adminSnapshot.exists) {
@@ -56,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
             .collection('ID')
             .doc(inputId)
             .collection('accounts')
-            .doc('userId') // Use the inputId here as well
+            .doc(inputId) // Use the inputId here as well
             .get();
 
 
@@ -65,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
 
           if (inputPassword == firestorePassword) {
             isAdmin = false;
-            userId = inputId;
+            userId = adminSnapshot.id;
             studentId = inputId;
             _showSnackbar('Logged in as Student');
           } else {

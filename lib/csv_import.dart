@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
+import 'dart:convert';
 
-Future<void> importCSVToFirestore(String userId) async {
+Future<void> importCSVToFirestore(String userId, String fileType) async {
   try {
     // Step 1: Pick the CSV file
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -30,40 +29,46 @@ Future<void> importCSVToFirestore(String userId) async {
       for (var i = 1; i < fields.length; i++) { // Start from 1 to skip header
         if (fields[i].length >= 7) {
           try {
-            String studentId = fields[i][2]?.toString() ?? '';
-            Map<String, dynamic> studentData = {
-              "firstName": fields[i][0]?.toString() ?? '',
-              "lastName": fields[i][1]?.toString() ?? '',
-              "id": studentId,
-              "phone": fields[i][3]?.toString() ?? '',
-              "email": fields[i][4]?.toString() ?? '',
-              "dormitory": fields[i][5]?.toString() ?? '',
-              "room": fields[i][6]?.toString() ?? '',
-            
-            };
+            if (fileType == 'admins') {
+              // Handle admin data
+              String adminId = fields[i][2]?.toString() ?? '';
+              Map<String, dynamic> adminData = {
+                "firstName": fields[i][0]?.toString() ?? '',
+                "lastName": fields[i][1]?.toString() ?? '',
+                "id": adminId,
+                "phone": fields[i][3]?.toString() ?? '',
+                "email": fields[i][4]?.toString() ?? '',
+                "dormitory": fields[i][5]?.toString() ?? '',
+                "room": fields[i][6]?.toString() ?? '',
+               
+              };
 
-            // Create a reference for each student using their studentId
-            var studentDocRef = FirebaseFirestore.instance
-                .collection('user')
-                .doc(userId)
-                .collection('ID')
-                .doc(studentId)
-                .collection('accounts')
-                .doc(userId)
-                .collection('students')
-                .doc(studentId); // Use studentId as the document ID
+              var adminDocRef = FirebaseFirestore.instance
+                  .collection('admin') // Assuming a separate collection for admins
+                  .doc(adminId);
 
-            // Add the student data to the batch
-            batch.set(studentDocRef, studentData);
+              batch.set(adminDocRef, adminData);
+            } else {
+              // Handle student data
+              String studentId = fields[i][2]?.toString() ?? '';
+              Map<String, dynamic> studentData = {
+                "firstName": fields[i][0]?.toString() ?? '',
+                "lastName": fields[i][1]?.toString() ?? '',
+                "id": studentId,
+                "phone": fields[i][3]?.toString() ?? '',
+                "email": fields[i][4]?.toString() ?? '',
+                "dormitory": fields[i][5]?.toString() ?? '',
+                "room": fields[i][6]?.toString() ?? '',
+              };
 
-            // Save student ID in the user ID collection
-            var idDocRef = FirebaseFirestore.instance
-                .collection('user')
-                .doc(userId)
-                .collection('ID')
-                .doc(studentId); // Use studentId as the document ID
+              var studentDocRef = FirebaseFirestore.instance
+                  .collection('user')
+                  .doc('userId')
+                  .collection('ID')
+                  .doc(studentId);
 
-            batch.set(idDocRef, {"userid": studentId}); // Add user ID document
+              batch.set(studentDocRef, studentData);
+            }
           } catch (e) {
             print("Error processing row $i: $e");
             hasError = true;

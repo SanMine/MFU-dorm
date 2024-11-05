@@ -29,10 +29,6 @@ class _QrPageState extends State<QrPage> {
           .doc('userId')
           .collection('ID')
           .doc(widget.studentId)
-          .collection('accounts')
-          .doc('userId')
-          .collection('students')
-          .doc(widget.studentId)
           .get();
 
       if (studentDoc.exists) {

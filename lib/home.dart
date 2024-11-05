@@ -1,132 +1,125 @@
 import 'package:flutter/material.dart';
-import 'canteen.dart';
-import 'chat.dart';
-import 'map.dart';
-import 'noti.dart';
-import 'qr.dart';
-import 'room.dart';
-import 'service.dart';
-import 'style.dart'; // Import the style file for consistent styling
-import 'menu.dart'; // Import MenuPage for the side menu
-import 'csv_import.dart'; // Import the CSV import function
+import 'canteen.dart'; // Import your CanteenPage
+import 'chat.dart'; // Import your ChatPage
+import 'map.dart'; // Import your MapPage
+import 'noti.dart'; // Import your NotificationPage
+import 'qr.dart'; // Import your QRPage
+import 'room.dart'; // Import your RoomPage
+import 'service.dart'; // Import your ServicePage
+import 'style.dart'; // Import your style.dart file
+import 'menu.dart'; // Import your MenuPage
+import 'csv_import.dart'; // Import CSV import function
 
 class HomePage extends StatefulWidget {
-  final Function(int) onPageSelected; // Function to navigate between pages
-  final bool isAdmin; // A flag to check if the user is an admin
+  final Function(int) onPageSelected; // Function to navigate
+  final bool isAdmin; // Flag to indicate if the user is an admin
+  final String studentId;
+  final String userId;
 
-  // Constructor to initialize the HomePage with necessary parameters
-  const HomePage({Key? key, required this.onPageSelected, this.isAdmin = false}) : super(key: key);
+  const HomePage({Key? key, required this.onPageSelected, this.isAdmin = false, required this.studentId, required this.userId}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  late AnimationController _menuController; // Controller for menu animation
-  late Animation<Offset> _menuAnimation; // Animation to slide the menu
+  late AnimationController _menuController; // Animation controller for menu
+  late Animation<Offset> _menuAnimation; // Animation for sliding the menu
 
   @override
   void initState() {
     super.initState();
-    // Initialize the animation controller with a duration
     _menuController = AnimationController(
       duration: const Duration(milliseconds: 400), // Animation duration
-      vsync: this, // Provide the TickerProvider
+      vsync: this,
     );
 
-    // Define the animation for sliding the menu
     _menuAnimation = Tween<Offset>(
-      begin: const Offset(-1.0, 0.0), // Start off-screen to the left
-      end: Offset.zero, // End at the original position
+      begin: const Offset(-1.0, 0.0),
+      end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _menuController,
-      curve: Curves.easeInOut, // Smooth easing animation
+      curve: Curves.easeInOut,
     ));
   }
 
   @override
   void dispose() {
-    _menuController.dispose(); // Clean up the controller
+    _menuController.dispose();
     super.dispose();
   }
 
-  // Function to toggle the menu (open/close)
   void _toggleMenu() {
     if (_menuController.isDismissed) {
-      _menuController.forward(); // Open menu
+      _menuController.forward();
     } else {
-      _menuController.reverse(); // Close menu
+      _menuController.reverse();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width; // Get screen width
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MFU Dormitory', style: TextStyleComponent.heading), // App title
-        centerTitle: true, // Center the title
+        title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu), // Menu button
-          onPressed: _toggleMenu, // Call toggle function when pressed
+          icon: const Icon(Icons.menu),
+          onPressed: _toggleMenu,
         ),
-        actions: widget.isAdmin // Check if user is admin
-            ? [
-                // Only show CSV upload option if the user is an admin
-                IconButton(
-                  icon: const Icon(Icons.file_upload), // Upload icon
-                  onPressed: _importCSV, // Call CSV import function
-                ),
-              ]
-            : [], // If not admin, show nothing
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload),
+            onPressed: _importCSV,
+          ),
+        ],
       ),
       body: Stack(
         children: [
-          // Main content area
           Padding(
-            padding: const EdgeInsets.all(16.0), // Padding for content
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align content to start
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAnnouncementSection(), // Show announcement section
-                const SizedBox(height: 20), // Space between sections
-                _buildFeatureGrid(screenWidth), // Show features in grid
+                _buildAnnouncementSection(),
+                const SizedBox(height: 20),
+                _buildFeatureGrid(screenWidth),
               ],
             ),
           ),
-          _buildOverlayMenu(), // Overlay for the side menu
+          _buildOverlayMenu(),
         ],
       ),
     );
   }
 
-  // Function to build the announcement section
   Widget _buildAnnouncementSection() {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.yellowAccent, // Background color
-        borderRadius: BorderRadius.all(Radius.circular(20)), // Rounded corners
+        color: Colors.yellowAccent,
+        borderRadius: BorderRadius.all(Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x40000000), // Shadow color
-            blurRadius: 4, // How blurry the shadow is
-            spreadRadius: 1, // How much the shadow spreads
+            color: Color(0x40000000),
+            blurRadius: 4,
+            spreadRadius: 1,
           ),
         ],
       ),
-      width: double.infinity, // Full width
-      height: 150, // Fixed height
+      width: double.infinity,
+      height: 150,
       child: const Row(
         children: [
           Padding(
-            padding: EdgeInsets.all(8.0), // Padding around the icon
-            child: Icon(Icons.announcement, size: 40, color: Colors.black54), // Announcement icon
+            padding: EdgeInsets.all(8.0),
+            child: Icon(Icons.announcement, size: 40, color: Colors.black54),
           ),
           Expanded(
             child: Text(
-              'IMPORTANT ANNOUNCEMENT!', // Announcement text
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Text style
+              'IMPORTANT ANNOUNCEMENT!',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -134,36 +127,34 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // Function to build the grid of features
   Widget _buildFeatureGrid(double screenWidth) {
     return Expanded(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: screenWidth < 600 ? 2 : 3, // Responsive layout based on screen width
-          mainAxisSpacing: 20, // Space between rows
-          crossAxisSpacing: 20, // Space between columns
+          crossAxisCount: screenWidth < 600 ? 2 : 3,
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 20,
         ),
-        itemCount: _features.length, // Total number of features
+        itemCount: _features.length,
         itemBuilder: (context, index) {
-          final feature = _features[index]; // Get feature data
+          final feature = _features[index];
           return FunctionContainer(
-            label: feature['label'], // Feature label
-            icon: feature['icon'], // Feature icon
+            label: feature['label'],
+            icon: feature['icon'],
             onTap: () {
-              // Check if the user is an admin and navigate appropriately
-              if (widget.isAdmin) {
-                // Admin can access all features
-                widget.onPageSelected(index);
-              } else {
-                // Students can access specific features
-                if (index < 4) { // Allow access to first four features (0-3)
-                  widget.onPageSelected(index);
-                } else {
-                  // Students can't access CSV upload feature
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Access Denied: Students cannot access this feature.')),
-                  );
-                }
+              switch (index) {
+                case 0:
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => RoomPage(studentId: widget.studentId, userId: widget.userId, isAdmin: widget.isAdmin,)));
+                  break;
+                case 1:
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MapPage()));
+                  break;
+                case 2:
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CanteenPage()));
+                  break;
+                case 3:
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ServicePage()));
+                  break;
               }
             },
           );
@@ -172,76 +163,106 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  // Function to build the overlay menu
   Widget _buildOverlayMenu() {
     return SlideTransition(
-      position: _menuAnimation, // Animate the menu position
+      position: _menuAnimation,
       child: MenuPage(
-        onClose: _toggleMenu, // Close menu with animation
+        onClose: _toggleMenu,
+        userId: widget.userId,
+        studentId: widget.studentId,
+        isAdmin: widget.isAdmin,
       ),
     );
   }
 
-  // Function to import CSV data
   Future<void> _importCSV() async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Importing CSV data...')), // Show import message
+      const SnackBar(content: Text('Please select a CSV file to import.')),
     );
 
     try {
-      await importCSVToFirestore('userId'); // Call CSV import function with userId
+      String? fileType = await _showCSVTypeSelectionDialog();
+      if (fileType == null) return; // User canceled selection
+
+      await importCSVToFirestore(widget.userId, fileType); // Pass userId and selected fileType
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('CSV data imported to Firestore')), // Success message
+        const SnackBar(content: Text('CSV data imported to Firestore')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to import CSV: $e')), // Error message
+        SnackBar(content: Text('Failed to import CSV: $e')),
       );
     }
   }
+
+  Future<String?> _showCSVTypeSelectionDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select CSV Type'),
+          content: const Text('Please choose the type of CSV file to import:'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'students'),
+              child: const Text('Students'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'admins'),
+              child: const Text('Admins'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, null), // Cancel
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
-// List of features to display in the grid
+// Feature list for GridView
 const List<Map<String, dynamic>> _features = [
-  {'label': 'My Room', 'icon': Icons.bed_rounded}, // Feature: My Room
-  {'label': 'Map', 'icon': Icons.map}, // Feature: Map
-  {'label': 'Canteen', 'icon': Icons.restaurant}, // Feature: Canteen
-  {'label': 'Services', 'icon': Icons.build}, // Feature: Services
-  // Add other features as needed, e.g. {'label': 'CSV Upload', 'icon': Icons.file_upload},
+  {'label': 'My Room', 'icon': Icons.bed_rounded},
+  {'label': 'Map', 'icon': Icons.map},
+  {'label': 'Canteen', 'icon': Icons.restaurant},
+  {'label': 'Services', 'icon': Icons.build},
+  // Add other features as needed
 ];
 
-// Widget to represent each feature as a button
 class FunctionContainer extends StatelessWidget {
-  final String label; // Label for the feature
-  final IconData icon; // Icon for the feature
-  final VoidCallback onTap; // Callback function when the feature is tapped
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
 
   const FunctionContainer({Key? key, required this.label, required this.icon, required this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap, // Call the onTap function when tapped
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white, // Background color
+          color: Colors.white,
           boxShadow: const [
             BoxShadow(
-              color: Color(0x40000000), // Shadow color
-              blurRadius: 4, // Blurriness of the shadow
-              spreadRadius: 1, // How much the shadow spreads
+              color: Color(0x40000000),
+              blurRadius: 4,
+              spreadRadius: 1,
             ),
           ],
-          borderRadius: BorderRadius.circular(20), // Rounded corners
+          borderRadius: BorderRadius.circular(20),
         ),
-        width: 150, // Fixed width
-        height: 150, // Fixed height
+        width: 150,
+        height: 150,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Center the content
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.blueAccent), // Feature icon
-            const SizedBox(height: 10), // Space between icon and text
-            Text(label, style: TextStyleComponent.bodyText), // Feature label
+            Icon(icon, size: 40, color: Colors.blueAccent),
+            const SizedBox(height: 10),
+            Text(label, style: TextStyleComponent.bodyText),
           ],
         ),
       ),

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mfu_dorm/profile.dart';
+import 'package:mfu_dorm/staff.dart';
 
 class MenuPage extends StatelessWidget {
   final VoidCallback onClose; // Callback to close the menu
+  final String userId;
+  final String studentId;
+  final bool isAdmin;
 
-  const MenuPage({Key? key, required this.onClose}) : super(key: key); // Constructor with onClose
+  const MenuPage({Key? key, required this.onClose, required this.userId, required this.studentId, required this.isAdmin}) : super(key: key); // Constructor with onClose
 
   @override
   Widget build(BuildContext context) {
@@ -43,22 +48,45 @@ class MenuPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Menu Header
-                  Text(
-                    'Menu',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                
 
                   // Add your menu items here with semantic labels
-                  _MenuItem(label: 'My Profile', onTap: () {
-                    // Handle profile tap
-                  }),
-                  _MenuItem(label: 'Staff', onTap: () {
-                    // Handle staff tap
-                  }),
+                 _MenuItem(
+                  label: 'My Profile',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfilePage(
+                          userId: userId,           
+                          studentId: studentId,   
+                          isAdmin: isAdmin,  
+                        
+                          
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+
+                  _MenuItem(
+                  label: 'Staff',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StaffPage(
+                          userId: userId,           
+                          studentId: studentId,   
+                         
+                        
+                          
+                        ),
+                      ),
+                    );
+                  },
+                ),
                   _MenuItem(label: 'Emergency', onTap: () {
                     // Handle emergency tap
                   }),

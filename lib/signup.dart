@@ -41,7 +41,7 @@ class _SignupPageState extends State<SignupPage> {
     // Directly check if the student ID document exists
     DocumentSnapshot studentDoc = await FirebaseFirestore.instance
         .collection('user')
-        .doc(widget.userId) // Use the current user's ID
+        .doc('userId') // Use the current user's ID
         .collection('ID')
         .doc(studentID) // Use studentID as document ID
         .get();
@@ -58,7 +58,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     // Now we can safely access the userid field
-    String firestoreId = studentDoc.get('userid');
+    String firestoreId = studentDoc.get('id');
     print("ID from Firestore: $firestoreId");
 
     // Check if the entered student ID matches the Firestore ID
@@ -66,11 +66,11 @@ class _SignupPageState extends State<SignupPage> {
       // Save the user credentials to Firestore
       await FirebaseFirestore.instance
           .collection('user')
-          .doc(widget.userId)
+          .doc('userId')
           .collection('ID')
           .doc(studentID)
           .collection('accounts')
-          .doc(widget.userId) // Save under the userId
+          .doc(studentID) // Save under the userId
           .set({
         'id': firestoreId, // Saving the user ID from Firestore
         'password': password, // Ensure you hash the password before saving in production
@@ -104,7 +104,7 @@ class _SignupPageState extends State<SignupPage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF7EB4FF), Color(0xFFA77AFF)],
             begin: Alignment.topCenter,
@@ -138,12 +138,12 @@ class _SignupPageState extends State<SignupPage> {
                       _buildTextField(_confirmPasswordController, 'Confirm Password', Icons.lock, obscureText: true),
                       SizedBox(height: screenHeight * 0.03),
                       _isLoading
-                          ? CircularProgressIndicator()
+                          ? const CircularProgressIndicator()
                           : _buildSignUpButton(screenHeight, screenWidth),
                       if (_errorMessage != null)
                         Text(
                           _errorMessage!,
-                          style: TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       SizedBox(height: screenHeight * 0.02),
                       TextButton(
@@ -195,7 +195,7 @@ class _SignupPageState extends State<SignupPage> {
           style: TextStyle(fontSize: screenHeight * 0.025),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFFA07AFF),
+          backgroundColor: const Color(0xFFA07AFF),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),

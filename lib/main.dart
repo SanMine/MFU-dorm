@@ -71,7 +71,7 @@ class _MainPageState extends State<MainPage> {
     _pages = [
       HomePage(
         isAdmin: widget.isAdmin,
-        onPageSelected: _onPageSelected,
+        onPageSelected: _onPageSelected, studentId: widget.studentId, userId: widget.userId,
       ),
       if (widget.isAdmin) const ScannerPage(), // Show ScannerPage for admin
       if (!widget.isAdmin) QrPage(userId: widget.userId, studentId: widget.studentId), // Show QR code for students

@@ -4,10 +4,15 @@ import 'package:intl/intl.dart';
 
 class ChatPage extends StatefulWidget {
   final bool isAdmin;
-  final String userId;
-  final String studentId;
+  final String userId; // User ID of the current user
+  final String studentId; // Student ID of the current user
 
-  const ChatPage({Key? key, required this.isAdmin, required this.userId, required this.studentId}) : super(key: key);
+  const ChatPage({
+    Key? key,
+    required this.isAdmin,
+    required this.userId,
+    required this.studentId,
+  }) : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -17,6 +22,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   CollectionReference? _chatCollection; // Nullable collection reference
   String? errorMessage; // Error message for displaying issues
+  String? dormitoryName; // Store the dormitory name
 
   @override
   void initState() {
@@ -31,9 +37,7 @@ class _ChatPageState extends State<ChatPage> {
 
       if (widget.isAdmin) {
         dormitoryDoc = await FirebaseFirestore.instance
-            .collection('adminAccounts')
-            .doc(widget.userId)
-            .collection('dormitory')
+            .collection('admin')
             .doc(widget.userId)
             .get();
       } else {
@@ -42,16 +46,15 @@ class _ChatPageState extends State<ChatPage> {
             .doc('userId')
             .collection('ID')
             .doc(widget.studentId)
-            .collection('accounts')
-            .doc('userId')
-            .collection('students')
-            .doc(widget.studentId)
             .get();
       }
 
       if (dormitoryDoc.exists) {
-        String dormitory = dormitoryDoc['dormitory'];
-        _chatCollection = FirebaseFirestore.instance.collection('Chat').doc(dormitory).collection('messages');
+        dormitoryName = dormitoryDoc['dormitory']; // Get the dormitory name
+        _chatCollection = FirebaseFirestore.instance
+            .collection('Chat')
+            .doc(dormitoryName)
+            .collection('messages'); // Save messages under the dormitory
         setState(() {});
       } else {
         setState(() {
@@ -68,9 +71,11 @@ class _ChatPageState extends State<ChatPage> {
   // Send a message to Firestore
   void _sendMessage() {
     if (_messageController.text.isNotEmpty && _chatCollection != null) {
+      String inputId = widget.isAdmin ? widget.userId : widget.studentId; // Use userId for admin, studentId for students
       _chatCollection!.add({
         'message': _messageController.text,
         'sender': widget.isAdmin ? 'Admin' : 'Student',
+        'userId': inputId, // Store the userId of the sender
         'timestamp': FieldValue.serverTimestamp(),
       }).then((_) {
         _messageController.clear();
@@ -105,7 +110,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chat"),
+        title: Text(dormitoryName ?? "Chat"), // Show dormitory name or default to "Chat"
       ),
       body: errorMessage != null
           ? Center(child: Text(errorMessage!))
@@ -125,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final isMe = message['sender'] == (widget.isAdmin ? 'Admin' : 'Student');
+                          final isMe = message['userId'] == (widget.isAdmin ? widget.userId : widget.studentId);
                           final messageText = message['message'] ?? '';
                           final timestamp = message['timestamp'] as Timestamp?;
 
@@ -158,7 +163,7 @@ class _ChatPageState extends State<ChatPage> {
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: isMe ? Colors.blue[100] : Colors.green[100],
+                                        color: isMe ? Colors.blue[100] : (widget.isAdmin ? Colors.orange[100] : Colors.green[100]),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
