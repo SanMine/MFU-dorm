@@ -16,7 +16,13 @@ class HomePage extends StatefulWidget {
   final String studentId;
   final String userId;
 
-  const HomePage({Key? key, required this.onPageSelected, this.isAdmin = false, required this.studentId, required this.userId}) : super(key: key);
+  const HomePage({
+    Key? key,
+    required this.onPageSelected,
+    this.isAdmin = false,
+    required this.studentId,
+    required this.userId
+  }) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -70,10 +76,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           onPressed: _toggleMenu,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.file_upload),
-            onPressed: _importCSV,
-          ),
+          if (widget.isAdmin) // Only show the upload button if the user is an admin
+            IconButton(
+              icon: const Icon(Icons.file_upload),
+              onPressed: _importCSV,
+            ),
         ],
       ),
       body: Stack(
@@ -153,7 +160,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const CanteenPage()));
                   break;
                 case 3:
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ServicePage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ServiceRequestPage(studentId: widget.studentId, userId: widget.userId, isAdmin: widget.isAdmin,)));
                   break;
               }
             },

@@ -1,40 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:mfu_dorm/login.dart';
 import 'package:mfu_dorm/profile.dart';
 import 'package:mfu_dorm/staff.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MenuPage extends StatelessWidget {
-  final VoidCallback onClose; // Callback to close the menu
+  final VoidCallback onClose;
   final String userId;
   final String studentId;
   final bool isAdmin;
+  final GlobalKey<LoginPageState> _loginPageKey = GlobalKey<LoginPageState>();
 
-  const MenuPage({Key? key, required this.onClose, required this.userId, required this.studentId, required this.isAdmin}) : super(key: key); // Constructor with onClose
+  MenuPage({
+    Key? key,
+    required this.onClose,
+    required this.userId,
+    required this.studentId,
+    required this.isAdmin,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width to calculate responsive widths
     double screenWidth = MediaQuery.of(context).size.width;
-    double menuWidth = getResponsiveWidth(screenWidth); // Get responsive width for menu
+    double menuWidth = getResponsiveWidth(screenWidth);
 
     return Stack(
       children: [
         GestureDetector(
-          onTap: onClose, // Close the menu if tapped outside
+          onTap: onClose,
           child: Container(
-            color: const Color.fromARGB(0, 0, 0, 0), // Dim background
+            color: const Color.fromARGB(0, 0, 0, 0),
           ),
         ),
         Align(
-          alignment: Alignment.centerLeft, // Align menu to the left
+          alignment: Alignment.centerLeft,
           child: Container(
-            width: menuWidth, // Use responsive width
-            height: double.infinity, // Make height responsive
+            width: menuWidth,
+            height: double.infinity,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: Colors.white, // Menu background color
+              color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2), // Optional shadow for depth
+                  color: Colors.black.withOpacity(0.2),
                   blurRadius: 6,
                   spreadRadius: 3,
                   offset: Offset(0, 3),
@@ -42,57 +50,63 @@ class MenuPage extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0), // Apply padding
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Menu Header
-                
-
-                  // Add your menu items here with semantic labels
-                 _MenuItem(
-                  label: 'My Profile',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserProfilePage(
-                          userId: userId,           
-                          studentId: studentId,   
-                          isAdmin: isAdmin,  
-                        
-                          
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-
                   _MenuItem(
-                  label: 'Staff',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StaffPage(
-                          userId: userId,           
-                          studentId: studentId,   
-                         
-                        
-                          
+                    label: 'My Profile',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserProfilePage(
+                            userId: userId,
+                            studentId: studentId,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                  _MenuItem(label: 'Emergency', onTap: () {
-                    // Handle emergency tap
-                  }),
-                  _MenuItem(label: 'Log Out', onTap: () {
-                    // Handle logout tap
-                  }),
+                      );
+                    },
+                  ),
+                  _MenuItem(
+                    label: 'Staff',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StaffPage(
+                            userId: userId,
+                            studentId: studentId,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _MenuItem(
+                    label: 'Log Out',
+                    onTap: () async {
+                      try {
+                        await FirebaseAuth.instance.signOut();
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoginPage(
+                              key: _loginPageKey,
+                              onLogin: (context, isAdmin, userId, studentId) {
+                                // Callback for successful login
+                              },
+                            ),
+                          ),
+                        );
+
+                        _loginPageKey.currentState?.clearFields();
+                      } catch (e) {
+                        print("Error logging out: $e");
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
@@ -102,17 +116,13 @@ class MenuPage extends StatelessWidget {
     );
   }
 
-  // Function to get the responsive width based on screen size
   double getResponsiveWidth(double screenWidth) {
     if (screenWidth > 600) {
-      // Large screen
-      return screenWidth * 0.75; // 75% of screen width for large screens
+      return screenWidth * 0.75;
     } else if (screenWidth > 400) {
-      // Medium screen
-      return screenWidth * 0.7; // 70% of screen width for medium screens
+      return screenWidth * 0.7;
     } else {
-      // Small screen
-      return screenWidth * 0.85; // 85% of screen width for small screens
+      return screenWidth * 0.85;
     }
   }
 }
@@ -128,11 +138,11 @@ class _MenuItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10.0), // Vertical padding for each menu item
+        padding: const EdgeInsets.symmetric(vertical: 10.0),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 18), // Menu item text style
-          semanticsLabel: label, // Add semantic label for accessibility
+          style: const TextStyle(fontSize: 18),
+          semanticsLabel: label,
         ),
       ),
     );

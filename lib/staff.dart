@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class StaffPage extends StatefulWidget {
   final String userId; // Current user ID
@@ -30,7 +30,7 @@ class _StaffPageState extends State<StaffPage> {
       // Fetch the dormitory of the current user
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('user')
-          .doc(widget.userId)
+          .doc('userId')
           .collection('ID')
           .doc(widget.studentId)
           .get();
@@ -59,6 +59,10 @@ class _StaffPageState extends State<StaffPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine the screen width and set crossAxisCount based on screen size
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth < 400 ? 1 : (screenWidth < 900 ? 2 : 3);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Staff Members"),
@@ -68,17 +72,14 @@ class _StaffPageState extends State<StaffPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Admin Members',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
             const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
+                  childAspectRatio: 2.0, // Adjust aspect ratio for a more compact look
                 ),
                 itemCount: staffMembers.length,
                 itemBuilder: (context, index) {
@@ -107,6 +108,9 @@ class StaffContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(
+        maxHeight: 150, // Reduced max height for a more compact layout
+      ),
       decoration: BoxDecoration(
         color: Colors.orange[300],
         borderRadius: BorderRadius.circular(20),
@@ -118,23 +122,45 @@ class StaffContainer extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Adjusted padding
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "Name: ${member['firstName']} ${member['lastName']}",
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 10),
-          Text("Contact No: ${member['phone'] ?? 'N/A'}", style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 10),
-          Text("Email: ${member['email'] ?? 'N/A'}", style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 10),
-          Text("Dormitory: ${member['dormitory'] ?? 'N/A'}", style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 10),
-          Text("Room: ${member['room'] ?? 'N/A'}", style: const TextStyle(fontSize: 14)),
+          const SizedBox(height: 4), // Reduced spacing
+          Text(
+            "Contact No: ${member['phone'] ?? 'N/A'}",
+            style: const TextStyle(fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Email: ${member['email'] ?? 'N/A'}",
+            style: const TextStyle(fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Dormitory: ${member['dormitory'] ?? 'N/A'}",
+            style: const TextStyle(fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Room: ${member['room'] ?? 'N/A'}",
+            style: const TextStyle(fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );

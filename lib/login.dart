@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mfu_dorm/signup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   final Function(BuildContext, bool, String, String) onLogin;
@@ -8,15 +9,37 @@ class LoginPage extends StatefulWidget {
   const LoginPage({Key? key, required this.onLogin}) : super(key: key);
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String _message = '';
 
+  // Initializes default values and resets states on widget load
+  @override
+  void initState() {
+    super.initState();
+    _isLoading = false;
+    _message = '';
+  }
+  void clearFields() {
+    _idController.clear();
+    _passwordController.clear();
+  }
+
+
+  // Dispose controllers to free up memory when the widget is destroyed
+  // @override
+  // void dispose() {
+  //   _idController.dispose();
+  //   _passwordController.dispose();
+  //   super.dispose();
+  // }
+
+  // Login function
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -30,16 +53,15 @@ class _LoginPageState extends State<LoginPage> {
     String studentId = '';
 
     try {
-      // First, check if the input ID corresponds to an admin
+      // Check if inputId is an admin
       DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
           .collection('admin')
-          .doc(inputId) // Using inputId as the document ID
+          .doc(inputId)
           .collection('account')
           .doc(inputId)
           .get();
 
       if (adminSnapshot.exists) {
-        // Verify admin password
         String firestorePassword = adminSnapshot.get('password');
         if (inputPassword == firestorePassword) {
           isAdmin = true;
@@ -47,42 +69,43 @@ class _LoginPageState extends State<LoginPage> {
           _showSnackbar('Logged in as Admin');
         } else {
           setState(() {
-            _message = 'Login unsuccessful. Check your ID and password.';
+            _message = 'Invalid ID or password.';
           });
+          return;
         }
       } else {
-        // If not an admin, check the user collection for students
+        // Check if inputId is a student
         DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
             .collection('user')
-            .doc('userId') // Use the inputId directly
+            .doc('userId')
             .collection('ID')
             .doc(inputId)
             .collection('accounts')
-            .doc(inputId) // Use the inputId here as well
+            .doc(inputId)
             .get();
-
 
         if (userSnapshot.exists) {
           String firestorePassword = userSnapshot.get('password');
-
           if (inputPassword == firestorePassword) {
             isAdmin = false;
-            userId = adminSnapshot.id;
+            userId = userSnapshot.id;
             studentId = inputId;
             _showSnackbar('Logged in as Student');
           } else {
             setState(() {
-              _message = 'Login unsuccessful. Check your ID and password.';
+              _message = 'Invalid ID or password.';
             });
+            return;
           }
         } else {
           setState(() {
             _message = 'User does not exist.';
           });
+          return;
         }
       }
 
-      // Navigate to the main page if login was successful
+      // If login is successful, proceed with the provided callback
       if (_message.isEmpty) {
         widget.onLogin(context, isAdmin, userId, studentId);
       }
@@ -99,13 +122,12 @@ class _LoginPageState extends State<LoginPage> {
 
   // Function to show snackbar
   void _showSnackbar(String message) {
-    final snackBar = SnackBar(
-      content: Text(message),
-      duration: Duration(seconds: 2),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: Duration(seconds: 2)),
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  // UI layout
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
@@ -156,7 +178,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: screenHeight * 0.03),
                   _buildActionButton(
-                    text: 'Login',
+                    text: _isLoading ? 'Logging in...' : 'Login',
                     color: const Color(0xFF4B7BFA),
                     onPressed: _isLoading ? null : _login,
                   ),
@@ -169,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => SignupPage(
-                            userId: 'userId', 
+                            userId: 'userId',
                             studentId: 'studentId',
                           ),
                         ),
@@ -177,12 +199,14 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   SizedBox(height: screenHeight * 0.02),
-                  Text(
-                    _message,
-                    style: TextStyle(
-                      color: _message == 'Login successful!' ? Colors.green : Colors.red,
+                  if (_message.isNotEmpty)
+                    Text(
+                      _message,
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
                   SizedBox(height: screenHeight * 0.02),
                   TextButton(
                     onPressed: () {
@@ -205,6 +229,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Function for text field widget
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -235,6 +260,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Function for action button widget
   Widget _buildActionButton({
     required String text,
     required Color color,

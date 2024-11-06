@@ -7,9 +7,8 @@ import 'dart:io';
 class UserProfilePage extends StatefulWidget {
   final String userId;
   final String studentId;
-  final bool isAdmin; // Add isAdmin parameter
 
-  const UserProfilePage({Key? key, required this.userId, required this.studentId, required this.isAdmin}) : super(key: key);
+  const UserProfilePage({Key? key, required this.userId, required this.studentId}) : super(key: key);
 
   @override
   _UserProfilePageState createState() => _UserProfilePageState();
@@ -29,22 +28,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _fetchUserProfile() async {
     try {
-      DocumentSnapshot snapshot;
-
-      // Check admin status to decide on the collection path
-      if (widget.isAdmin) {
-        snapshot = await FirebaseFirestore.instance
-            .collection('admin')
-            .doc(widget.userId)
-            .get();
-      } else {
-        snapshot = await FirebaseFirestore.instance
-            .collection('user')
-            .doc('userId')
-            .collection('ID')
-            .doc(widget.studentId)
-            .get();
-      }
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('user')
+          .doc('userId')
+          .collection('ID')
+          .doc(widget.studentId)
+          .get();
 
       if (snapshot.exists) {
         setState(() {
@@ -78,19 +67,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
         String downloadUrl = await snapshot.ref.getDownloadURL();
 
         // Update Firestore with the new image URL
-        if (widget.isAdmin) {
-          await FirebaseFirestore.instance
-              .collection('admin')
-              .doc(widget.userId)
-              .update({'profileImage': downloadUrl});
-        } else {
-          await FirebaseFirestore.instance
-              .collection('user')
-              .doc(widget.userId)
-              .collection('ID')
-              .doc(widget.studentId)
-              .update({'profileImage': downloadUrl});
-        }
+        await FirebaseFirestore.instance
+            .collection('user')
+            .doc('userId')
+            .collection('ID')
+            .doc(widget.studentId)
+            .update({'profileImage': downloadUrl});
 
         setState(() {
           profileImageUrl = downloadUrl;
@@ -148,15 +130,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   
                   const SizedBox(height: 20),
                   ElevatedButton(
-                  onPressed: _navigateToChangePassword,
-                  child: const Text(
-                    'Change Password',
-                    style: TextStyle(fontSize: 15, color: Colors.white), // Set font size and color here
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                  ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChangePasswordPage(userId: widget.userId),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Change Password',
+                  style: TextStyle(fontSize: 15, color: Colors.white), // Set font size and color here
                 ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                ),
+              ),
+
+
                 ],
               ),
             ),
