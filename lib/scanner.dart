@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:csv/csv.dart';
-import 'package:intl/intl.dart'; // Import the intl package
+import 'package:intl/intl.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
@@ -16,51 +17,78 @@ class ScannerPage extends StatefulWidget {
 
 class _ScannerPageState extends State<ScannerPage> {
   String scanResult = "";
-  bool isCheckIn = true; // Default to Check In
+  bool isCheckIn = true; // Default to Check-In
+  bool isProcessingScan = false; // Flag to prevent duplicate scans
 
-  void _processScanResult(String result) async {
-    // Here, parse the result into a Map.
-    Map<String, dynamic> data = {}; // Replace with actual JSON parsing logic
+  // This method processes the scan result, saves to Firestore, and manages the UI feedback
+  Future<void> _processScanResult(String result) async {
+    if (isProcessingScan) return; // Prevent multiple scans
+    isProcessingScan = true;
 
-    // Collect data
-    String? firstName = data['firstName'];
-    String? lastName = data['lastName'];
-    String? id = data['id'];
-    String? phone = data['phone'];
-    String? email = data['email'];
-    String? dormitory = data['dormitory'];
-    String? room = data['room'];
-    DateTime now = DateTime.now();
+    try {
+      // Parse the result as JSON to get student data
+      Map<String, dynamic> data = jsonDecode(result);
 
-    // Format date and time
-    String formattedDate = DateFormat('dd/MM/yyyy').format(now);
-    String formattedTime = DateFormat('HH:mm').format(now);
+      // Collect necessary data from the parsed QR data
+      String? firstName = data['name']?.split(" ")?.first;
+      String? lastName = data['name']?.split(" ")?.last;
+      String? id = data['id'];
+      String? phone = data['phone'];
+      String? email = data['email'];
+      String? dormitory = data['dormitory'];
+      String? room = data['room'];
+      DateTime now = DateTime.now();
 
-    // Save to Firestore
-    await FirebaseFirestore.instance.collection('checkins').add({
-      'firstName': firstName,
-      'lastName': lastName,
-      'id': id,
-      'phone': phone,
-      'email': email,
-      'dormitory': dormitory,
-      'room': room,
-      'date': formattedDate,
-      'checkInTime': isCheckIn ? formattedTime : null,
-      'checkOutTime': !isCheckIn ? formattedTime : null,
-    });
+      // Format date and time
+      String formattedDate = DateFormat('dd/MM/yyyy').format(now);
+      String formattedTime = DateFormat('HH:mm').format(now);
 
-    // Show a snackbar based on check-in or check-out
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(isCheckIn ? "Check In" : "Check Out"),
-      backgroundColor: isCheckIn ? Colors.green : Colors.blue,
-    ));
+      // Save to Firestore under the specified path `/checkins/{dormitory}/data`
+      if (dormitory != null) {
+        await FirebaseFirestore.instance
+            .collection('checkins')
+            .doc(dormitory)
+            .collection('data')
+            .add({
+          'firstName': firstName,
+          'lastName': lastName,
+          'id': id,
+          'phone': phone,
+          'email': email,
+          'dormitory': dormitory,
+          'room': room,
+          'date': formattedDate,
+          'checkInTime': isCheckIn ? formattedTime : null,
+          'checkOutTime': !isCheckIn ? formattedTime : null,
+        });
+
+        // Show feedback on successful check-in/check-out
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isCheckIn ? "Check-In Successful" : "Check-Out Successful"),
+          backgroundColor: isCheckIn ? Colors.green : Colors.blue,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Invalid data in QR code"),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error processing QR code: $e"),
+        backgroundColor: Colors.red,
+      ));
+    } finally {
+      // Reset the flag after processing completes
+      isProcessingScan = false;
+    }
   }
 
+  // Download data method remains largely unchanged
   Future<void> downloadData() async {
     try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('checkins').get();
-      
+      QuerySnapshot snapshot = await FirebaseFirestore.instance.collectionGroup('data').get();
+
       List<List<dynamic>> rows = [];
       List<String> headers = [
         "First Name",
@@ -137,8 +165,8 @@ class _ScannerPageState extends State<ScannerPage> {
                     _processScanResult(scanResult);
                   });
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: const Text("Unsuccessful"),
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Unsuccessful scan"),
                     backgroundColor: Colors.red,
                   ));
                 }
@@ -161,7 +189,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   inactiveThumbColor: Colors.white,
                   inactiveTrackColor: Colors.grey,
                 ),
-                Text(isCheckIn ? "Check In" : "Check Out"),
+                Text(isCheckIn ? "Check-In" : "Check-Out"),
               ],
             ),
           ),

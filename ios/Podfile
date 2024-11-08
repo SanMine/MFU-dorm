@@ -1,5 +1,4 @@
-# Uncomment the next line to define a global platform for your project
-platform :ios, '15.0'
+platform :ios, '18.0'  # Ensure iOS platform target is set to 16.0
 
 target 'Runner' do
   use_frameworks!
@@ -16,9 +15,15 @@ target 'Runner' do
   end
 end
 
-# Post install configuration to exclude arm64 for the simulator
+# Combine both configurations into a single post_install hook
 post_install do |installer|
   installer.pods_project.build_configurations.each do |config|
     config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+  end
+
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+    end
   end
 end
