@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:mfu_dorm/signup.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   final Function(BuildContext, bool, String, String) onLogin;
@@ -29,17 +28,6 @@ class LoginPageState extends State<LoginPage> {
     _idController.clear();
     _passwordController.clear();
   }
-
-
-  // Dispose controllers to free up memory when the widget is destroyed
-  // @override
-  // void dispose() {
-  //   _idController.dispose();
-  //   _passwordController.dispose();
-  //   super.dispose();
-  // }
-
-  // Login function
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -141,7 +129,8 @@ class LoginPageState extends State<LoginPage> {
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF7EB4FF), Color(0xFFA77AFF)],
+             // colors: [Color(0xFF7EB4FF), Color(0xFFA77AFF)],
+             colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -179,13 +168,13 @@ class LoginPageState extends State<LoginPage> {
                   SizedBox(height: screenHeight * 0.03),
                   _buildActionButton(
                     text: _isLoading ? 'Logging in...' : 'Login',
-                    color: const Color(0xFF4B7BFA),
+                    color: const Color.fromARGB(255, 111, 149, 255),
                     onPressed: _isLoading ? null : _login,
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   _buildActionButton(
                     text: 'Sign Up',
-                    color: const Color(0xFF4B7BFA),
+                    color: const Color.fromARGB(255, 115, 148, 241),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -202,7 +191,7 @@ class LoginPageState extends State<LoginPage> {
                   if (_message.isNotEmpty)
                     Text(
                       _message,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                         fontSize: 14,
                       ),
@@ -215,7 +204,7 @@ class LoginPageState extends State<LoginPage> {
                     child: Text(
                       'Forgot your password?',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: const Color.fromARGB(255, 79, 105, 255),
                         fontSize: screenHeight * 0.02,
                       ),
                     ),
@@ -251,7 +240,7 @@ class LoginPageState extends State<LoginPage> {
           borderSide: BorderSide.none,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color.fromARGB(255, 255, 255, 255),
         contentPadding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.02,
           horizontal: screenWidth * 0.05,

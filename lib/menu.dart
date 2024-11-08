@@ -63,7 +63,7 @@ class MenuPage extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (context) => UserProfilePage(
                             userId: userId,
-                            studentId: studentId,
+                            studentId: studentId, isAdmin: isAdmin,
                           ),
                         ),
                       );
@@ -78,6 +78,7 @@ class MenuPage extends StatelessWidget {
                           builder: (context) => StaffPage(
                             userId: userId,
                             studentId: studentId,
+                            isAdmin: isAdmin,
                           ),
                         ),
                       );

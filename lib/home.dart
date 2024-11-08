@@ -68,23 +68,48 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: _toggleMenu,
-        ),
-        actions: [
-          if (widget.isAdmin) // Only show the upload button if the user is an admin
-            IconButton(
-              icon: const Icon(Icons.file_upload),
-              onPressed: _importCSV,
+      // The AppBar with gradient background
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF7EB4FF), Color(0xFF7EB4FF)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-        ],
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent, // Set transparency
+            elevation: 0,
+            title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: _toggleMenu,
+            ),
+            actions: [
+              if (widget.isAdmin) // Only show the upload button if the user is an admin
+                IconButton(
+                  icon: const Icon(Icons.file_upload),
+                  onPressed: _importCSV,
+                ),
+            ],
+          ),
+        ),
       ),
+      
       body: Stack(
         children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

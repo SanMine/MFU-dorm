@@ -15,6 +15,7 @@ class QrPage extends StatefulWidget {
 class _QrPageState extends State<QrPage> {
   Map<String, dynamic>? studentData;
   bool isLoading = true;
+  String? profileImageUrl;
 
   @override
   void initState() {
@@ -31,20 +32,24 @@ class _QrPageState extends State<QrPage> {
           .doc(widget.studentId)
           .get();
 
-      if (studentDoc.exists) {
-        setState(() {
-          studentData = studentDoc.data() as Map<String, dynamic>?;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          studentData = null;
-          isLoading = false;
-        });
-      }
+      DocumentSnapshot imageDoc = await FirebaseFirestore.instance
+          .collection('user')
+          .doc('userId')
+          .collection('ID')
+          .doc(widget.studentId)
+          .collection('image')
+          .doc(widget.studentId)
+          .get();
+
+      setState(() {
+        studentData = studentDoc.exists ? studentDoc.data() as Map<String, dynamic>? : null;
+        profileImageUrl = imageDoc.exists ? imageDoc['url'] as String : null;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
         studentData = null;
+        profileImageUrl = null;
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -56,46 +61,92 @@ class _QrPageState extends State<QrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Student QR Code"),
-        backgroundColor: Colors.blueAccent, // Set your desired color
-      ),
-      body: Center(
-        child: isLoading
-            ? const CircularProgressIndicator()
-            : studentData == null
-                ? const Text("No student data available.")
-                : _buildQrCodePage(),
+      body: Stack(
+        children: [
+          // Gradient Background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 30), // Custom Back Button spacing
+                Expanded(
+                  child: Center(
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : studentData == null
+                            ? const Text("No student data available.")
+                            : _buildQrCodeContainer(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildQrCodePage() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+  Widget _buildQrCodeContainer() {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: Colors.yellow[100],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Student Image (Placeholder)
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage("https://example.com/path/to/profile/image.jpg"), // Replace with actual image URL
-          ),
-          const SizedBox(height: 16),
+          // Conditionally display the profile image or "No image" text
+          profileImageUrl != null
+              ? CircleAvatar(
+                  radius: 40,
+                  backgroundImage: NetworkImage(profileImageUrl!),
+                )
+              : const Text("No image", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 10),
+          // User Name
           Text(
-            "${studentData!['firstName']} ${studentData!['lastName']}",
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            "${studentData?['firstName']} ${studentData?['lastName']}",
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+          // QR Code
           QrImageView(
             data: _generateQrData(),
             version: QrVersions.auto,
             size: 200.0,
           ),
-          const SizedBox(height: 20),
-          Text("Student ID: ${studentData!['id']}", style: const TextStyle(fontSize: 16)),
-          Text("Dormitory: ${studentData!['dormitory']}", style: const TextStyle(fontSize: 16)),
-          Text("Room: ${studentData!['room']}", style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 10),
+          // Student Information
+          Text(
+            "Student ID - ${studentData?['id']}\nDormitory - ${studentData?['dormitory']}\nRoom - ${studentData?['room']}",
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

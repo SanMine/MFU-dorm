@@ -8,7 +8,12 @@ class NotiPage extends StatefulWidget {
   final String userId;
   final String studentId;
 
-  const NotiPage({super.key, required this.isAdmin, required this.userId, required this.studentId});
+  const NotiPage({
+    super.key,
+    required this.isAdmin,
+    required this.userId,
+    required this.studentId,
+  });
 
   @override
   _NotiPageState createState() => _NotiPageState();
@@ -26,47 +31,39 @@ class _NotiPageState extends State<NotiPage> {
     _initializeNotifications();
   }
 
-  // Initialize Firestore collection reference based on user and student IDs
   void _initializeNotificationCollection() {
     _notificationCollection = FirebaseFirestore.instance.collection('noti');
   }
 
-  // Initialize the local notifications plugin
   void _initializeNotifications() {
     _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
-
     _flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  // Show a notification in the notification bar
- Future<void> _showNotification(String message) async {
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-    'default_channel', // channel ID (should be unique within the app)
-    'General Notifications', // channel name shown to the user
-    //'This channel is used for general notifications', // channel description shown in settings
-    importance: Importance.max,
-    priority: Priority.high,
-    showWhen: false,
-  );
-  const NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-  await _flutterLocalNotificationsPlugin.show(
-    0, // Notification ID (can use 0 if no specific ID management needed)
-    'New Notification', // Notification title
-    message, // Notification body text
-    platformChannelSpecifics,
-  );
-}
+  Future<void> _showNotification(String message) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'default_channel',
+      'General Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await _flutterLocalNotificationsPlugin.show(
+      0,
+      'New Notification',
+      message,
+      platformChannelSpecifics,
+    );
+  }
 
-
-  // Show a popup when a new notification is detected
   void _detectNewNotifications(List<QueryDocumentSnapshot> notifications) {
     if (notifications.length > _previousNotificationCount) {
       final newNotification = notifications.first;
@@ -75,21 +72,18 @@ class _NotiPageState extends State<NotiPage> {
     _previousNotificationCount = notifications.length;
   }
 
-  // Add notification to Firestore
   Future<void> _addNotification(String message) async {
     if (message.isNotEmpty) {
       await _notificationCollection.add({
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
       });
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
     }
   }
 
-  // Show dialog to add notification
   void _showAddNotificationDialog() {
     TextEditingController _messageController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -102,7 +96,7 @@ class _NotiPageState extends State<NotiPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
             ),
@@ -118,21 +112,19 @@ class _NotiPageState extends State<NotiPage> {
     );
   }
 
-  // Format timestamp
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return 'Unknown time';
     DateTime dateTime = timestamp.toDate();
     DateTime now = DateTime.now();
     if (now.year == dateTime.year && now.month == dateTime.month && now.day == dateTime.day) {
-      return DateFormat.jm().format(dateTime); // e.g., 2:30 PM
+      return DateFormat.jm().format(dateTime);
     } else if (now.difference(dateTime).inDays == 1) {
       return 'Yesterday';
     } else {
-      return DateFormat.yMMMd().format(dateTime); // e.g., Jan 1, 2022
+      return DateFormat.yMMMd().format(dateTime);
     }
   }
 
-  // Delete notification
   Future<void> _deleteNotification(String id) async {
     await _notificationCollection.doc(id).delete();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -143,45 +135,52 @@ class _NotiPageState extends State<NotiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _notificationCollection.orderBy('timestamp', descending: true).snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final notifications = snapshot.data!.docs;
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text(
+                'Notification',
+                style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _notificationCollection.orderBy('timestamp', descending: true).snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final notifications = snapshot.data!.docs;
+                  _detectNewNotifications(notifications);
 
-          // Detect new notifications and show them as local notifications
-          _detectNewNotifications(notifications);
-
-          return ListView.builder(
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                child: ListTile(
-                  title: Text(notification['message']),
-                  subtitle: Text(
-                    _formatTimestamp(notification['timestamp']),
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                  trailing: widget.isAdmin
-                      ? IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteNotification(notification.id);
-                          },
-                        )
-                      : null, // No icon for non-admin users
-                ),
-              );
-            },
-          );
-        },
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(20.0),
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return _buildNotificationCard(
+                        notification['message'],
+                        _formatTimestamp(notification['timestamp']),
+                        notification.id,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: widget.isAdmin
           ? FloatingActionButton(
@@ -189,6 +188,49 @@ class _NotiPageState extends State<NotiPage> {
               child: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+
+  Widget _buildNotificationCard(String message, String timestamp, String id) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 6,
+              backgroundColor: Colors.purple,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message,
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    timestamp,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.isAdmin) // Show delete icon only if isAdmin is true
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () {
+                  _deleteNotification(id);
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

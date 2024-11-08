@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class StaffPage extends StatefulWidget {
   final String userId; // Current user ID
   final String studentId; // Current student ID
+  final bool isAdmin; // Flag to determine if the user is an admin
 
   const StaffPage({
     Key? key,
     required this.userId,
     required this.studentId,
+    required this.isAdmin, // Default to false if not provided
   }) : super(key: key);
 
   @override
@@ -27,30 +29,56 @@ class _StaffPageState extends State<StaffPage> {
 
   Future<void> _fetchUserDormitoryAndStaffMembers() async {
     try {
-      // Fetch the dormitory of the current user
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('user')
-          .doc('userId')
-          .collection('ID')
-          .doc(widget.studentId)
-          .get();
-
-      if (userDoc.exists) {
-        dormitory = userDoc['dormitory'];
-
-        // Fetch admin members where dormitory matches
-        QuerySnapshot staffSnapshot = await FirebaseFirestore.instance
+      if (widget.isAdmin) {
+        // Fetch dormitory for the admin user from 'admin/userId'
+        DocumentSnapshot adminDoc = await FirebaseFirestore.instance
             .collection('admin')
-            .where('dormitory', isEqualTo: dormitory)
+            .doc(widget.userId) // Fetch admin data by userId
             .get();
 
-        List<Map<String, dynamic>> members = staffSnapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
+        if (adminDoc.exists) {
+          dormitory = adminDoc['dormitory'];
 
-        setState(() {
-          staffMembers = members;
-        });
+          // Fetch admin members where dormitory matches
+          QuerySnapshot staffSnapshot = await FirebaseFirestore.instance
+              .collection('admin')
+              .where('dormitory', isEqualTo: dormitory)
+              .get();
+
+          List<Map<String, dynamic>> members = staffSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+
+          setState(() {
+            staffMembers = members;
+          });
+        }
+      } else {
+        // Fetch the dormitory of the current student from 'user/userId/ID/studentId'
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('user')
+            .doc('userId')
+            .collection('ID')
+            .doc(widget.studentId)
+            .get();
+
+        if (userDoc.exists) {
+          dormitory = userDoc['dormitory'];
+
+          // Fetch admin members where dormitory matches
+          QuerySnapshot staffSnapshot = await FirebaseFirestore.instance
+              .collection('admin')
+              .where('dormitory', isEqualTo: dormitory)
+              .get();
+
+          List<Map<String, dynamic>> members = staffSnapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+
+          setState(() {
+            staffMembers = members;
+          });
+        }
       }
     } catch (e) {
       print("Error fetching staff members: $e");
