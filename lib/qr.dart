@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert'; // Import for JSON encoding
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -16,25 +18,29 @@ class _QrPageState extends State<QrPage> {
   Map<String, dynamic>? studentData;
   bool isLoading = true;
   String? profileImageUrl;
+  Timer? timer;
+  int countdown = 30; // Countdown timer in seconds
+  String qrData = ''; // Store the current QR code data
 
   @override
   void initState() {
     super.initState();
     _fetchStudentData();
+    _startTimer();
   }
 
   Future<void> _fetchStudentData() async {
     try {
       DocumentSnapshot studentDoc = await FirebaseFirestore.instance
           .collection('user')
-          .doc('userId')
+          .doc('userId') // 'userId' is a document string name 
           .collection('ID')
           .doc(widget.studentId)
           .get();
 
       DocumentSnapshot imageDoc = await FirebaseFirestore.instance
           .collection('user')
-          .doc('userId')
+          .doc('userId') // 'userId' is a document string name 
           .collection('ID')
           .doc(widget.studentId)
           .collection('image')
@@ -45,6 +51,7 @@ class _QrPageState extends State<QrPage> {
         studentData = studentDoc.exists ? studentDoc.data() as Map<String, dynamic>? : null;
         profileImageUrl = imageDoc.exists ? imageDoc['url'] as String : null;
         isLoading = false;
+        _generateQrData(); // Generate initial QR data after loading student data
       });
     } catch (e) {
       setState(() {
@@ -56,6 +63,27 @@ class _QrPageState extends State<QrPage> {
         SnackBar(content: Text("Error fetching student data: $e")),
       );
     }
+  }
+
+  void _startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      if (countdown > 0) {
+        setState(() {
+          countdown--;
+        });
+      } else {
+        _generateQrData(); // Regenerate QR data every 30 seconds
+        setState(() {
+          countdown = 30; // Reset countdown
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
   }
 
   @override
@@ -133,9 +161,18 @@ class _QrPageState extends State<QrPage> {
           const SizedBox(height: 10),
           // QR Code
           QrImageView(
-            data: _generateQrData(),
+            data: qrData, // Use the current QR data
             version: QrVersions.auto,
             size: 200.0,
+          ),
+          const SizedBox(height: 10),
+          // Countdown timer with color
+          Text(
+            "Refresh in: $countdown seconds",
+            style: TextStyle(
+              fontSize: 16,
+              color: countdown <= 5 ? Colors.red : Colors.black, // Change to red when <= 5 seconds
+            ),
           ),
           const SizedBox(height: 10),
           // Student Information
@@ -152,9 +189,20 @@ class _QrPageState extends State<QrPage> {
     );
   }
 
-  String _generateQrData() {
-    return studentData != null
-        ? '{"name": "${studentData!['firstName']} ${studentData!['lastName']}", "id": "${studentData!['id']}", "email": "${studentData!['email']}", "phone": "${studentData!['phone']}", "dormitory": "${studentData!['dormitory']}", "room": "${studentData!['room']}"}'
-        : 'No data available';
+  void _generateQrData() {
+    // Use JSON encoding for QR data generation
+    if (studentData != null) {
+      final qrDataMap = {
+        'name': "${studentData!['firstName']} ${studentData!['lastName']}",
+        'id': studentData!['id'],
+        'timestamp': DateTime.now().millisecondsSinceEpoch
+      };
+      
+      // Encode the map as a JSON string for QR data
+      qrData = jsonEncode(qrDataMap);
+      
+      // Log the QR data for debugging
+      print("Generated QR Data: $qrData");
+    }
   }
 }

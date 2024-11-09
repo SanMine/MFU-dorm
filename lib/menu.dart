@@ -39,13 +39,17 @@ class MenuPage extends StatelessWidget {
             height: double.infinity,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: const LinearGradient(
+              colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
                   blurRadius: 6,
                   spreadRadius: 3,
-                  offset: Offset(0, 3),
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -123,7 +127,7 @@ class MenuPage extends StatelessWidget {
     } else if (screenWidth > 400) {
       return screenWidth * 0.7;
     } else {
-      return screenWidth * 0.85;
+      return screenWidth * 0.55;
     }
   }
 }

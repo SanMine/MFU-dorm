@@ -19,72 +19,67 @@ class _ScannerPageState extends State<ScannerPage> {
   String scanResult = "";
   bool isCheckIn = true; // Default to Check-In
   bool isProcessingScan = false; // Flag to prevent duplicate scans
+  bool hasScanned = false; // Flag to track if the last scan is processed
 
-  // This method processes the scan result, saves to Firestore, and manages the UI feedback
+  // Processes the scanned result
   Future<void> _processScanResult(String result) async {
-    if (isProcessingScan) return; // Prevent multiple scans
+    if (isProcessingScan || hasScanned) return; // Prevent multiple scans
     isProcessingScan = true;
+    hasScanned = true; // Set hasScanned to true to prevent further processing
 
     try {
-      // Parse the result as JSON to get student data
+      // Decode the QR code data
       Map<String, dynamic> data = jsonDecode(result);
 
-      // Collect necessary data from the parsed QR data
-      String? firstName = data['name']?.split(" ")?.first;
-      String? lastName = data['name']?.split(" ")?.last;
-      String? id = data['id'];
-      String? phone = data['phone'];
-      String? email = data['email'];
-      String? dormitory = data['dormitory'];
-      String? room = data['room'];
-      DateTime now = DateTime.now();
+      // Validate the expected data
+      if (data['id'] == null || data['dormitory'] == null) {
+        throw Exception("Invalid data in QR code");
+      }
 
-      // Format date and time
-      String formattedDate = DateFormat('dd/MM/yyyy').format(now);
-      String formattedTime = DateFormat('HH:mm').format(now);
+      // Prepare the data for Firestore
+      String formattedDate = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      String formattedTime = DateFormat('HH:mm').format(DateTime.now());
 
       // Save to Firestore under the specified path `/checkins/{dormitory}/data`
-      if (dormitory != null) {
-        await FirebaseFirestore.instance
-            .collection('checkins')
-            .doc(dormitory)
-            .collection('data')
-            .add({
-          'firstName': firstName,
-          'lastName': lastName,
-          'id': id,
-          'phone': phone,
-          'email': email,
-          'dormitory': dormitory,
-          'room': room,
-          'date': formattedDate,
-          'checkInTime': isCheckIn ? formattedTime : null,
-          'checkOutTime': !isCheckIn ? formattedTime : null,
-        });
+      await FirebaseFirestore.instance
+          .collection('checkins')
+          .doc(data['dormitory'])
+          .collection('data')
+          .add({
+        'firstName': data['name'].split(" ").first,
+        'lastName': data['name'].split(" ").last,
+        'id': data['id'],
+        'phone': data['phone'],
+        'email': data['email'],
+        'dormitory': data['dormitory'],
+        'room': data['room'],
+        'date': formattedDate,
+        'checkInTime': isCheckIn ? formattedTime : null,
+        'checkOutTime': isCheckIn ? null : formattedTime,
+      });
 
-        // Show feedback on successful check-in/check-out
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isCheckIn ? "Check-In Successful" : "Check-Out Successful"),
-          backgroundColor: isCheckIn ? Colors.green : Colors.blue,
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Invalid data in QR code"),
-          backgroundColor: Colors.red,
-        ));
-      }
-    } catch (e) {
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Error processing QR code: $e"),
+        content: Text(isCheckIn ? "Check-In Successful" : "Check-Out Successful"),
+        backgroundColor: isCheckIn ? Colors.green : Colors.blue,
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Error processing QR code"),
         backgroundColor: Colors.red,
       ));
     } finally {
-      // Reset the flag after processing completes
-      isProcessingScan = false;
+      isProcessingScan = false; // Reset the flag after processing
+      // Reset hasScanned after a short delay to allow for new scans
+      Future.delayed(const Duration(seconds: 1), () {
+        setState(() {
+          hasScanned = false; // Allow scanning again
+        });
+      });
     }
   }
 
-  // Download data method remains largely unchanged
+  // Method to download the check-in data as a CSV file
   Future<void> downloadData() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collectionGroup('data').get();
@@ -125,7 +120,7 @@ class _ScannerPageState extends State<ScannerPage> {
       String csv = const ListToCsvConverter().convert(rows);
 
       // Get the directory to save the file
-      Directory? directory = await getApplicationDocumentsDirectory();
+      Directory directory = await getApplicationDocumentsDirectory();
       String path = '${directory.path}/checkins.csv';
 
       // Save the CSV file
@@ -159,11 +154,9 @@ class _ScannerPageState extends State<ScannerPage> {
             child: MobileScanner(
               onDetect: (BarcodeCapture capture) {
                 final String? code = capture.barcodes.first.rawValue;
-                if (code != null) {
-                  setState(() {
-                    scanResult = code;
-                    _processScanResult(scanResult);
-                  });
+                if (code != null && code.isNotEmpty) {
+                  scanResult = code;
+                  _processScanResult(scanResult);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Unsuccessful scan"),
@@ -173,24 +166,61 @@ class _ScannerPageState extends State<ScannerPage> {
               },
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Switch(
-                  value: isCheckIn,
-                  onChanged: (value) {
-                    setState(() {
-                      isCheckIn = value;
-                    });
-                  },
-                  activeColor: Colors.blue,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey,
+          _buildCheckInOutToggle(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckInOutToggle() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                isCheckIn = true;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              decoration: BoxDecoration(
+                color: isCheckIn ? Colors.blue : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.blue),
+              ),
+              child: Text(
+                "Check In",
+                style: TextStyle(
+                  color: isCheckIn ? Colors.white : Colors.blue,
+                  fontSize: 18,
                 ),
-                Text(isCheckIn ? "Check-In" : "Check-Out"),
-              ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10), // Spacing between buttons
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                isCheckIn = false;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              decoration: BoxDecoration(
+                color: !isCheckIn ? Colors.blue : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.blue),
+              ),
+              child: Text(
+                "Check Out",
+                style: TextStyle(
+                  color: !isCheckIn ? Colors.white : Colors.blue,
+                  fontSize: 18,
+                ),
+              ),
             ),
           ),
         ],

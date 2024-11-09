@@ -3,17 +3,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart'; // For toast notifications
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
   final String studentId;
-  final bool isAdmin; // Add this flag to check if the user is an admin
+  final bool isAdmin;
 
   const UserProfilePage({
     Key? key,
-    required this.userId,
     required this.studentId,
     required this.isAdmin,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -22,10 +23,11 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   Map<String, dynamic>? userData;
-  Map<String, dynamic>? adminData; // Variable to store admin data
+  Map<String, dynamic>? adminData;
   final ImagePicker _picker = ImagePicker();
   String? profileImageUrl;
-  bool _isPickingImage = false; // Flag to prevent multiple picker calls
+  bool _isPickingImage = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,26 +37,28 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _fetchUserProfile() async {
     try {
-      // If user is an admin, fetch from the admin collection
+      setState(() {
+        _isLoading = true;
+      });
       if (widget.isAdmin) {
+        // Fetch admin data
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection('admin')
-            .doc(widget.userId) // Fetch from admin collection using userId
+            .doc(widget.userId)
             .get();
 
         setState(() {
           adminData = snapshot.exists ? snapshot.data() as Map<String, dynamic> : null;
         });
       } else {
-        // Fetch user data if the user is not an admin
+        // Fetch user data and profile image
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection('user')
-            .doc('userId')
+            .doc('userId') // Use correct user ID here
             .collection('ID')
             .doc(widget.studentId)
             .get();
 
-        // Fetch profile image URL from the image sub-collection
         DocumentSnapshot imageSnapshot = await FirebaseFirestore.instance
             .collection('user')
             .doc('userId')
@@ -72,7 +76,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
         });
       }
     } catch (e) {
-      print("Error fetching user profile: $e");
+      _showErrorToast("Error fetching user profile: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -81,25 +89,32 @@ class _UserProfilePageState extends State<UserProfilePage> {
     _isPickingImage = true;
 
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    _isPickingImage = false; // Reset the flag after picking
+    _isPickingImage = false;
 
     if (pickedFile != null) {
-      String fileName = pickedFile.name; // Use the name property
+      String fileName = pickedFile.name;
+
+      // Validate file type
+      if (!fileName.endsWith('.jpg') && !fileName.endsWith('.jpeg') && !fileName.endsWith('.png')) {
+        _showErrorToast("Invalid file type. Please select a JPEG or PNG image.");
+        return;
+      }
+
       File file = File(pickedFile.path);
 
       try {
-        // Upload to Firebase Storage
+        // Upload the file to Firebase Storage
         TaskSnapshot snapshot = await FirebaseStorage.instance
-            .ref('profile_images/${widget.userId}/${widget.studentId}/$fileName')
+            .ref('profile_images/userId/${widget.studentId}/$fileName')
             .putFile(file);
 
-        // Get download URL
+        // Get the download URL of the uploaded image
         String downloadUrl = await snapshot.ref.getDownloadURL();
 
-        // Update Firestore with the new image URL in the image sub-collection
+        // Save the download URL in Firestore under the correct user and student ID
         await FirebaseFirestore.instance
             .collection('user')
-            .doc(widget.userId)
+            .doc('userId') // Correct usage of widget.userId
             .collection('ID')
             .doc(widget.studentId)
             .collection('accounts')
@@ -108,14 +123,35 @@ class _UserProfilePageState extends State<UserProfilePage> {
             .doc(widget.studentId)
             .set({'url': downloadUrl});
 
-        // Update profileImageUrl to reflect the new image
         setState(() {
           profileImageUrl = downloadUrl;
         });
+
+        _showSuccessToast("Profile image uploaded successfully!");
       } catch (e) {
-        print("Error uploading image: $e");
+        _showErrorToast("Error uploading image: $e");
       }
+    } else {
+      _showErrorToast("No image selected.");
     }
+  }
+
+  void _showErrorToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_LONG,
+    );
+  }
+
+  void _showSuccessToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_SHORT,
+    );
   }
 
   @override
@@ -126,15 +162,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
         title: const Text('User Profile'),
         leading: const BackButton(color: Colors.black),
       ),
-      body: widget.isAdmin
-          ? _buildAdminProfile() // If the user is an admin, show admin profile
-          : _buildUserProfile(), // Otherwise, show regular user profile
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : widget.isAdmin
+              ? _buildAdminProfile()
+              : _buildUserProfile(),
     );
   }
 
   Widget _buildUserProfile() {
     return userData == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: Text("No user data available"))
         : Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -145,8 +183,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     onTap: _uploadProfileImage,
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage:
-                          profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
+                      backgroundImage: profileImageUrl != null
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
                       child: profileImageUrl == null
                           ? const Icon(Icons.person, size: 50)
                           : null,
@@ -182,7 +221,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Widget _buildAdminProfile() {
     return adminData == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: Text("No admin data available"))
         : Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -193,8 +232,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     onTap: _uploadProfileImage,
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage:
-                          profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
+                      backgroundImage: profileImageUrl != null
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
                       child: profileImageUrl == null
                           ? const Icon(Icons.person, size: 50)
                           : null,
@@ -238,7 +278,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 }
 
-// Placeholder for ChangePasswordPage
+// Placeholder for ChangePasswordPage class
 class ChangePasswordPage extends StatelessWidget {
   final String userId;
 
