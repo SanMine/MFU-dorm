@@ -31,3 +31,10 @@ dev_dependencies:
   flutter_lints: ^3.0.0
 flutter:
   uses-material-design: true
+  assets:
+  - images/1.png
+  - images/2.png
+  - images/3.png
+  - images/4.png
+  - images/5.png
+  - images/6.png

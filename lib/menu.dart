@@ -65,7 +65,7 @@ class MenuPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UserProfilePage(
+                          builder: (context) => ProfilePage(
                             userId: userId,
                             studentId: studentId, isAdmin: isAdmin,
                           ),

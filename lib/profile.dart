@@ -1,47 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
-import 'package:fluttertoast/fluttertoast.dart'; // For toast notifications
 
-class UserProfilePage extends StatefulWidget {
+class ProfilePage extends StatefulWidget {
   final String userId;
-  final String studentId;
+  final String studentId; // Not used for admin
   final bool isAdmin;
 
-  const UserProfilePage({
+  const ProfilePage({
     Key? key,
+    required this.userId,
     required this.studentId,
     required this.isAdmin,
-    required this.userId,
   }) : super(key: key);
 
   @override
-  _UserProfilePageState createState() => _UserProfilePageState();
+  _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> {
+class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? userData;
   Map<String, dynamic>? adminData;
-  final ImagePicker _picker = ImagePicker();
   String? profileImageUrl;
-  bool _isPickingImage = false;
-  bool _isLoading = true;
+
+  // List of available images in the assets folder
+  final List<String> profileImages = [
+    'images/1.png',
+    'images/2.png',
+    'images/3.png',
+    'images/4.png',
+    'images/5.png',
+    'images/6.png',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
+    _fetchProfileData();
   }
 
-  Future<void> _fetchUserProfile() async {
+  // Fetch user or admin profile data based on the role
+  Future<void> _fetchProfileData() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
       if (widget.isAdmin) {
-        // Fetch admin data
+        // Fetch admin data from Firestore
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection('admin')
             .doc(widget.userId)
@@ -49,130 +50,115 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
         setState(() {
           adminData = snapshot.exists ? snapshot.data() as Map<String, dynamic> : null;
+          profileImageUrl = adminData?['image']; // Assume you store the image URL here
         });
       } else {
-        // Fetch user data and profile image
+        // Fetch student data from Firestore
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection('user')
-            .doc('userId') // Use correct user ID here
+            .doc('userId') // Use widget.userId here
             .collection('ID')
-            .doc(widget.studentId)
-            .get();
-
-        DocumentSnapshot imageSnapshot = await FirebaseFirestore.instance
-            .collection('user')
-            .doc('userId')
-            .collection('ID')
-            .doc(widget.studentId)
-            .collection('accounts')
-            .doc(widget.studentId)
-            .collection('image')
             .doc(widget.studentId)
             .get();
 
         setState(() {
           userData = snapshot.exists ? snapshot.data() as Map<String, dynamic> : null;
-          profileImageUrl = imageSnapshot.exists ? imageSnapshot['url'] as String : null;
+          profileImageUrl = userData?['image']; // Assume you store the image URL here
         });
       }
     } catch (e) {
-      _showErrorToast("Error fetching user profile: $e");
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print("Error fetching profile data: $e");
     }
   }
 
-  Future<void> _uploadProfileImage() async {
-    if (_isPickingImage) return; // Prevent multiple calls
-    _isPickingImage = true;
+  void _showImageSelectionDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Select Profile Image"),
+        content: SingleChildScrollView(
+          scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+          child: Row(
+            children: profileImages.map((imagePath) {
+              return GestureDetector(
+                onTap: () {
+                  _selectProfileImage(imagePath);
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipOval( // Make image circular
+                    child: Image.asset(
+                      imagePath,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: Text("Cancel"),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
 
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    _isPickingImage = false;
 
-    if (pickedFile != null) {
-      String fileName = pickedFile.name;
-
-      // Validate file type
-      if (!fileName.endsWith('.jpg') && !fileName.endsWith('.jpeg') && !fileName.endsWith('.png')) {
-        _showErrorToast("Invalid file type. Please select a JPEG or PNG image.");
-        return;
-      }
-
-      File file = File(pickedFile.path);
-
-      try {
-        // Upload the file to Firebase Storage
-        TaskSnapshot snapshot = await FirebaseStorage.instance
-            .ref('profile_images/userId/${widget.studentId}/$fileName')
-            .putFile(file);
-
-        // Get the download URL of the uploaded image
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-
-        // Save the download URL in Firestore under the correct user and student ID
-        await FirebaseFirestore.instance
-            .collection('user')
-            .doc('userId') // Correct usage of widget.userId
-            .collection('ID')
-            .doc(widget.studentId)
-            .collection('accounts')
-            .doc(widget.studentId)
-            .collection('image')
-            .doc(widget.studentId)
-            .set({'url': downloadUrl});
-
-        setState(() {
-          profileImageUrl = downloadUrl;
-        });
-
-        _showSuccessToast("Profile image uploaded successfully!");
-      } catch (e) {
-        _showErrorToast("Error uploading image: $e");
-      }
+  // Function to handle image selection
+  Future<void> _selectProfileImage(String imagePath) async {
+  try {
+    if (widget.isAdmin) {
+      // Update the Firestore document for admin
+      await FirebaseFirestore.instance
+          .collection('admin')
+          .doc(widget.userId) // Correctly reference admin document
+          .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
     } else {
-      _showErrorToast("No image selected.");
+      // Update the Firestore document for user
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc('userId') // Use widget.userId directly
+          .collection('ID')
+          .doc(widget.studentId)
+          .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
     }
-  }
 
-  void _showErrorToast(String message) {
-    Fluttertoast.showToast(
-      msg: message,
-      backgroundColor: Colors.red,
-      textColor: Colors.white,
-      toastLength: Toast.LENGTH_LONG,
-    );
+    setState(() {
+      profileImageUrl = imagePath; // Update the local image URL
+    });
+  } catch (e) {
+    print("Error updating profile image: $e");
   }
+}
 
-  void _showSuccessToast(String message) {
-    Fluttertoast.showToast(
-      msg: message,
-      backgroundColor: Colors.green,
-      textColor: Colors.white,
-      toastLength: Toast.LENGTH_SHORT,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('User Profile'),
+        title: const Text('Profile'),
         leading: const BackButton(color: Colors.black),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : widget.isAdmin
-              ? _buildAdminProfile()
-              : _buildUserProfile(),
+      body: widget.isAdmin ? _buildAdminProfile() : _buildUserProfile(),
     );
   }
 
+  // Build user profile UI
   Widget _buildUserProfile() {
     return userData == null
-        ? const Center(child: Text("No user data available"))
+        ? const Center(child: CircularProgressIndicator())
         : Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -180,11 +166,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 Center(
                   child: GestureDetector(
-                    onTap: _uploadProfileImage,
+                    onTap: _showImageSelectionDialog, // Show image selection dialog
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage: profileImageUrl != null
-                          ? NetworkImage(profileImageUrl!)
+                          ? AssetImage(profileImageUrl!)
                           : null,
                       child: profileImageUrl == null
                           ? const Icon(Icons.person, size: 50)
@@ -198,30 +184,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text('Student Id: ${userData!['id']}'),
+                Text('Student ID: ${userData!['id']}'),
                 const SizedBox(height: 8),
                 Text('Phone: ${userData!['phone']}'),
                 const SizedBox(height: 8),
                 Text('Email: ${userData!['email']}'),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _navigateToChangePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                  ),
-                  child: const Text(
-                    'Change Password',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                ),
+                const SizedBox(height: 8),
+                Text('Dormitory: ${userData!['dormitory']}'),
+                const SizedBox(height: 8),
+                Text('Room: ${userData!['room']}'),
               ],
             ),
           );
   }
 
+  // Build admin profile UI
   Widget _buildAdminProfile() {
     return adminData == null
-        ? const Center(child: Text("No admin data available"))
+        ? const Center(child: CircularProgressIndicator())
         : Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -229,11 +209,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 Center(
                   child: GestureDetector(
-                    onTap: _uploadProfileImage,
+                    onTap: _showImageSelectionDialog, // Show image selection dialog
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage: profileImageUrl != null
-                          ? NetworkImage(profileImageUrl!)
+                          ? AssetImage(profileImageUrl!)
                           : null,
                       child: profileImageUrl == null
                           ? const Icon(Icons.person, size: 50)
@@ -247,52 +227,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text('Admin Id: ${adminData!['id']}'),
+                Text('Admin ID: ${adminData!['id']}'),
                 const SizedBox(height: 8),
                 Text('Phone: ${adminData!['phone']}'),
                 const SizedBox(height: 8),
                 Text('Email: ${adminData!['email']}'),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _navigateToChangePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                  ),
-                  child: const Text(
-                    'Change Password',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                ),
               ],
             ),
           );
-  }
-
-  void _navigateToChangePassword() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChangePasswordPage(userId: widget.userId),
-      ),
-    );
-  }
-}
-
-// Placeholder for ChangePasswordPage class
-class ChangePasswordPage extends StatelessWidget {
-  final String userId;
-
-  const ChangePasswordPage({Key? key, required this.userId}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Change Password"),
-      ),
-      body: const Center(
-        child: Text("Change Password Functionality Goes Here"),
-      ),
-    );
   }
 }

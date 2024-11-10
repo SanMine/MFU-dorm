@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mfu_dorm/scanner.dart';
-import 'package:mfu_dorm/signup.dart';
 import 'home.dart';
 import 'login.dart'; // User LoginPage
 import 'qr.dart'; // QR code page
@@ -22,6 +21,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MFU Dormitory App',
+      theme: ThemeData(
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color.fromARGB(255, 0, 179, 255), // Ensures color application
+        ),
+      ),
       initialRoute: '/login',
       routes: {
         '/login': (context) => LoginPage(onLogin: _onLogin), // Pass login callback
@@ -30,8 +34,9 @@ class MyApp extends StatelessWidget {
           final bool isAdmin = args['isAdmin'];
           final String userId = args['userId'];
           final String studentId = args['studentId'];
+        
 
-          return MainPage(isAdmin: isAdmin, userId: userId, studentId: studentId);
+          return MainPage(isAdmin: isAdmin, userId: userId, studentId: studentId,);
         },
       },
     );
@@ -50,8 +55,9 @@ class MainPage extends StatefulWidget {
   final bool isAdmin;
   final String userId; // Add userId
   final String studentId; // Add studentId
+  
 
-  const MainPage({Key? key, required this.isAdmin, required this.userId, required this.studentId}) : super(key: key);
+  const MainPage({Key? key, required this.isAdmin, required this.userId, required this.studentId,}) : super(key: key);
 
   @override
   _MainPageState createState() => _MainPageState();
@@ -74,7 +80,7 @@ class _MainPageState extends State<MainPage> {
         onPageSelected: _onPageSelected, studentId: widget.studentId, userId: widget.userId,
       ),
       if (widget.isAdmin) const ScannerPage(), // Show ScannerPage for admin
-      if (!widget.isAdmin) QrPage(userId: widget.userId, studentId: widget.studentId), // Show QR code for students
+      if (!widget.isAdmin) QrPage(userId: widget.userId, studentId: widget.studentId, ), // Show QR code for students
       ChatPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
       NotiPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
     ];
@@ -97,6 +103,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(255, 0, 179, 255),
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.home, color: Colors.blue),
