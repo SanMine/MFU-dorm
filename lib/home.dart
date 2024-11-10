@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+                colors: [Color(0xFF7EB4FF),Color.fromARGB(255, 255, 255, 255)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -292,9 +292,9 @@ class FunctionContainer extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.blueAccent),
+            Icon(icon, size: 40, color: const Color(0xFF004561)),
             const SizedBox(height: 10),
-            Text(label, style: TextStyleComponent.bodyText),
+            Text(label, style: TextStyleComponent.bodyText, ),
           ],
         ),
       ),
