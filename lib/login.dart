@@ -99,7 +99,7 @@ class LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       setState(() {
-        _message = 'Error: ${e.toString()}';
+        _message = 'Input ID and password';
       });
     } finally {
       setState(() {
@@ -142,17 +142,13 @@ class LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(height: screenHeight * 0.05),
-                  Text(
-                    'MFU\nDormitory',
-                    style: TextStyle(
-                      fontSize: screenHeight * 0.05,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.2,
-                    ),
-                    textAlign: TextAlign.center,
+                  Image.asset(
+                    'images/M3.png',
+                    height: screenHeight * 0.3, // Adjust height as needed
+                    width: screenWidth * 0.5,   // Adjust width as needed
                   ),
-                  SizedBox(height: screenHeight * 0.1),
+
+                  SizedBox(height: screenHeight * 0.01),
                   _buildTextField(
                     controller: _idController,
                     labelText: 'Student/Admin ID',
@@ -165,15 +161,15 @@ class LoginPageState extends State<LoginPage> {
                     icon: Icons.lock,
                     obscureText: true,
                   ),
-                  SizedBox(height: screenHeight * 0.03),
+                  SizedBox(height: screenHeight * 0.05),
                   _buildActionButton(
-                    text: _isLoading ? 'Logging in...' : 'Login',
+                    text: _isLoading ? 'Logging in...' : 'Login', 
                     color: const Color.fromARGB(255, 111, 149, 255),
                     onPressed: _isLoading ? null : _login,
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   _buildActionButton(
-                    text: 'Sign Up',
+                    text: _isLoading? 'Sign Up...': 'Sign Up',
                     color: const Color.fromARGB(255, 115, 148, 241),
                     onPressed: () {
                       Navigator.push(
@@ -204,7 +200,7 @@ class LoginPageState extends State<LoginPage> {
                     child: Text(
                       'Forgot your password?',
                       style: TextStyle(
-                        color: const Color.fromARGB(255, 79, 105, 255),
+                        color: const Color.fromARGB(255, 97, 121, 255),
                         fontSize: screenHeight * 0.02,
                       ),
                     ),
@@ -236,7 +232,7 @@ class LoginPageState extends State<LoginPage> {
         labelStyle: const TextStyle(color: Colors.black54),
         prefixIcon: Icon(icon, color: Colors.black54),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
         filled: true,
@@ -250,30 +246,35 @@ class LoginPageState extends State<LoginPage> {
   }
 
   // Function for action button widget
-  Widget _buildActionButton({
-    required String text,
-    required Color color,
-    required VoidCallback? onPressed,
-  }) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
+Widget _buildActionButton({
+  required String text,
+  required Color color,
+  required VoidCallback? onPressed,
+}) {
+  double screenHeight = MediaQuery.of(context).size.height;
+  double screenWidth = MediaQuery.of(context).size.width;
 
-    return SizedBox(
-      width: screenWidth * 0.6,
-      height: screenHeight * 0.07,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(fontSize: screenHeight * 0.025),
+  return SizedBox(
+    width: screenWidth * 0.5,
+    height: screenHeight * 0.07,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15), // Set radius to 15
         ),
       ),
-    );
-  }
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: screenHeight * 0.025,
+          color: Colors.white, // Change text color to white
+        ),
+      ),
+    ),
+  );
 }
+
+  }
+
