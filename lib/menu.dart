@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mfu_dorm/emergency.dart';
 import 'package:mfu_dorm/login.dart';
 import 'package:mfu_dorm/profile.dart';
 import 'package:mfu_dorm/staff.dart';
@@ -40,10 +41,10 @@ class MenuPage extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-              colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+                colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
@@ -61,13 +62,15 @@ class MenuPage extends StatelessWidget {
                 children: [
                   _MenuItem(
                     label: 'My Profile',
+                    icon: Icons.person,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ProfilePage(
                             userId: userId,
-                            studentId: studentId, isAdmin: isAdmin,
+                            studentId: studentId,
+                            isAdmin: isAdmin,
                           ),
                         ),
                       );
@@ -75,6 +78,7 @@ class MenuPage extends StatelessWidget {
                   ),
                   _MenuItem(
                     label: 'Staff',
+                    icon: Icons.people,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -89,7 +93,21 @@ class MenuPage extends StatelessWidget {
                     },
                   ),
                   _MenuItem(
+                    label: 'Emergency',
+                    icon: Icons.local_hospital,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EmergencyPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Spacer(), // Pushes the "Log Out" button to the bottom
+                  _MenuItem(
                     label: 'Log Out',
+                    icon: Icons.logout,
                     onTap: () async {
                       try {
                         await FirebaseAuth.instance.signOut();
@@ -134,9 +152,15 @@ class MenuPage extends StatelessWidget {
 
 class _MenuItem extends StatelessWidget {
   final String label;
+  final IconData icon;
   final VoidCallback onTap;
 
-  const _MenuItem({Key? key, required this.label, required this.onTap}) : super(key: key);
+  const _MenuItem({
+    Key? key,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +168,16 @@ class _MenuItem extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 18),
-          semanticsLabel: label,
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.black54),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 18),
+              semanticsLabel: label,
+            ),
+          ],
         ),
       ),
     );

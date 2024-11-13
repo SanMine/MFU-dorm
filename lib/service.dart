@@ -469,26 +469,37 @@ class _ServiceRequestPageState extends State<ServiceRequestPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                isFixServiceRequest = true;
-                              });
-                              _showRequestForm(); // Show the form
-                            },
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                            child: const Text('Fix Service Request', style: TextStyle(color: Colors.white)),
+                         ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            isFixServiceRequest = true;
+                          });
+                          _showRequestForm(); // Show the form
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10), 
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                isFixServiceRequest = false;
-                              });
-                              _showRequestForm(); // Show the form
-                            },
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                            child: const Text('Stay Outside Request', style: TextStyle(color: Colors.white)),
+                        ),
+                        child: const Text('Fix Service Request', style: TextStyle(color: Colors.white)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            isFixServiceRequest = false;
+                          });
+                          _showRequestForm(); // Show the form
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10), // Set the radius here
                           ),
+                        ),
+                        child: const Text('Stay Outside Request', style: TextStyle(color: Colors.white)),
+                      ),
+
                         ],
                       ),
                     ],
@@ -498,8 +509,13 @@ class _ServiceRequestPageState extends State<ServiceRequestPage> {
                         onPressed: () async {
                           await downloadRequests(); // Call the download function
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                        child: const Text('Download Requests', style: TextStyle(color: Colors.white)),
+                       style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10), // Set the radius here
+                          ),
+                        ),
+                        child: const Text('Download The Request', style: TextStyle(color: Colors.white)),
                       ),
                     ],
                   ],

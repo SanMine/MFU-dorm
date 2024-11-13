@@ -1,14 +1,14 @@
+import 'dart:async'; // Import for Timer
 import 'package:flutter/material.dart';
+import 'package:mfu_dorm/rule.dart';
 import 'canteen.dart'; // Import your CanteenPage
-import 'chat.dart'; // Import your ChatPage
+import 'csv_import.dart'; // Import CSV import function
 import 'map.dart'; // Import your MapPage
-import 'noti.dart'; // Import your NotificationPage
-import 'qr.dart'; // Import your QRPage
+import 'menu.dart'; // Import your MenuPage
 import 'room.dart'; // Import your RoomPage
 import 'service.dart'; // Import your ServicePage
 import 'style.dart'; // Import your style.dart file
-import 'menu.dart'; // Import your MenuPage
-import 'csv_import.dart'; // Import CSV import function
+import 'map.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int) onPageSelected; // Function to navigate
@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
     required this.onPageSelected,
     this.isAdmin = false,
     required this.studentId,
-    required this.userId
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -31,6 +31,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   late AnimationController _menuController; // Animation controller for menu
   late Animation<Offset> _menuAnimation; // Animation for sliding the menu
+  late PageController _pageController; // Controller for the PageView
+  int _currentIndex = 0; // Current image index
+  Timer? _timer; // Timer for automatic image switching
 
   @override
   void initState() {
@@ -47,11 +50,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       parent: _menuController,
       curve: Curves.easeInOut,
     ));
+
+    _pageController = PageController(); // Initialize PageController
+    _startImageTimer(); // Start the timer for auto-swiping images
   }
 
   @override
   void dispose() {
     _menuController.dispose();
+    _pageController.dispose(); // Dispose the PageController
+    _timer?.cancel(); // Cancel the timer
     super.dispose();
   }
 
@@ -63,12 +71,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }
   }
 
+  void _startImageTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_currentIndex < 2) {
+        _currentIndex++;
+      } else {
+        _currentIndex = 0;
+      }
+      _pageController.animateToPage(
+        _currentIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      // The AppBar with gradient background
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Container(
@@ -80,13 +102,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
           child: AppBar(
-            backgroundColor: Colors.transparent, // Set transparency
+            
+            backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Set transparency
             elevation: 0,
             title: const Text('MFU Dormitory', style: TextStyleComponent.heading),
             centerTitle: true,
             leading: IconButton(
               icon: const Icon(Icons.menu),
               onPressed: _toggleMenu,
+              
             ),
             actions: [
               if (widget.isAdmin) // Only show the upload button if the user is an admin
@@ -95,27 +119,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   onPressed: _importCSV,
                 ),
             ],
+            
+            
           ),
         ),
       ),
-      
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF7EB4FF),Color.fromARGB(255, 255, 255, 255)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+          Positioned.fill(
+            child: Image.asset(
+              'images/dormbg.jpg',
+              fit: BoxFit.cover, // Makes the image cover the entire screen
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(0.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAnnouncementSection(),
+
+                _buildImageCarousel(), // Image Carousel Section
                 const SizedBox(height: 20),
                 _buildFeatureGrid(screenWidth),
               ],
@@ -127,43 +150,37 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildAnnouncementSection() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.yellowAccent,
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 4,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      width: double.infinity,
-      height: 150,
-      child: const Row(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Icon(Icons.announcement, size: 40, color: Colors.black54),
-          ),
-          Expanded(
-            child: Text(
-              'IMPORTANT ANNOUNCEMENT!',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ Widget _buildImageCarousel() {
+  return SizedBox(
+    height: 200, // Set a fixed height for the carousel container
+    child: PageView(
+      controller: _pageController,
+      children: [
+        // Ensure the images fit the container fully while maintaining their aspect ratio
+        Image.asset(
+          'images/a1.jpg',
+          fit: BoxFit.fill, // BoxFit.fill will make the image fully fit in the container
+        ),
+        Image.asset(
+          'images/a2.jpg',
+          fit: BoxFit.fill,
+        ),
+        Image.asset(
+          'images/a3.png',
+          fit: BoxFit.fill,
+        ),
+      ],
+    ),
+  );
+}
+
+
 
   Widget _buildFeatureGrid(double screenWidth) {
     return Expanded(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: screenWidth < 600 ? 2 : 3,
+          crossAxisCount: screenWidth < 600 ? 3 : 3,
           mainAxisSpacing: 20,
           crossAxisSpacing: 20,
         ),
@@ -182,11 +199,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const MapPage()));
                   break;
                 case 2:
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CanteenPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => CanteenPage()));
                   break;
                 case 3:
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ServiceRequestPage(studentId: widget.studentId, userId: widget.userId, isAdmin: widget.isAdmin,)));
                   break;
+                case 4: 
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const RulePage()));
               }
             },
           );
@@ -261,6 +280,7 @@ const List<Map<String, dynamic>> _features = [
   {'label': 'Map', 'icon': Icons.map},
   {'label': 'Canteen', 'icon': Icons.restaurant},
   {'label': 'Services', 'icon': Icons.build},
+  {'label': 'Rules', 'icon': Icons.rule},
   // Add other features as needed
 ];
 
@@ -292,9 +312,9 @@ class FunctionContainer extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: const Color(0xFF004561)),
+            Icon(icon, size: 40, color: const Color.fromARGB(255, 0, 119, 255)),
             const SizedBox(height: 10),
-            Text(label, style: TextStyleComponent.bodyText, ),
+            Text(label, style: TextStyleComponent.bodyText),
           ],
         ),
       ),

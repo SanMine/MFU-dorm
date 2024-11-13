@@ -91,15 +91,21 @@ class _QrPageState extends State<QrPage> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
+           Positioned.fill(
+        child: Image.asset(
+          'images/dormbg.jpg',
+          fit: BoxFit.cover, // Makes the image cover the entire screen
+        ),
+      ),
+          // Container(
+          //   decoration: const BoxDecoration(
+          //     gradient: LinearGradient(
+          //       colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //     ),
+          //   ),
+          // ),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(

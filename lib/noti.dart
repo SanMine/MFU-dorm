@@ -128,7 +128,7 @@ class _NotiPageState extends State<NotiPage> {
   Future<void> _deleteNotification(String id) async {
     await _notificationCollection.doc(id).delete();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notification deleted')),
+      const SnackBar(content: Text('Announcement deleted')),
     );
   }
 
@@ -149,7 +149,7 @@ class _NotiPageState extends State<NotiPage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               title: const Text(
-                'Notification',
+                'Announcement',
                 style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
@@ -200,7 +200,7 @@ class _NotiPageState extends State<NotiPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 6,
               backgroundColor: Colors.purple,
             ),

@@ -25,6 +25,11 @@ dependencies:
   intl: ^0.19.0
   path_provider: ^2.1.5
   share_plus: ^10.1.2
+  url_launcher: ^6.3.1
+  photo_view: ^0.15.0
+  webview_flutter: ^4.10.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -40,3 +45,10 @@ flutter:
   - images/6.png
   - images/M1.png
   - images/M3.png
+  - images/dormbg.jpg
+  - images/mfumap.png
+  - images/canteenmap.jpg
+  - images/mfu.jpeg
+  - images/a1.jpg
+  - images/a2.jpg
+  - images/a3.png

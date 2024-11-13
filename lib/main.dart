@@ -6,6 +6,7 @@ import 'login.dart'; // User LoginPage
 import 'qr.dart'; // QR code page
 import 'chat.dart'; // Chat page
 import 'noti.dart'; // Notifications page
+import 'map.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +84,7 @@ class _MainPageState extends State<MainPage> {
       if (!widget.isAdmin) QrPage(userId: widget.userId, studentId: widget.studentId, ), // Show QR code for students
       ChatPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
       NotiPage(isAdmin: widget.isAdmin, userId: widget.userId , studentId: widget.studentId,),
+      
     ];
   }
 
@@ -106,26 +108,26 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: const Color.fromARGB(255, 0, 179, 255),
         items: [
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.blue),
+            icon: Icon(Icons.home_rounded, color: Colors.blue),
             label: 'Home',
           ),
           if (widget.isAdmin) // Show scanner for admin
             const BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner, color: Colors.green),
+              icon: Icon(Icons.qr_code_scanner_rounded, color: Colors.green),
               label: 'QR Scanner',
             ),
           if (!widget.isAdmin) // Show QR Code button for students
             const BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code, color: Colors.green),
+              icon: Icon(Icons.qr_code_rounded, color: Colors.green),
               label: 'QR Code',
             ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: Colors.orange),
+            icon: Icon(Icons.chat_rounded, color: Colors.orange),
             label: 'Chat',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.notifications, color: Colors.red),
-            label: 'Notifications',
+            icon: Icon(Icons.announcement_rounded, color: Colors.red),
+            label: 'Announcement',
           ),
         ],
         currentIndex: _selectedIndex,
