@@ -1,6 +1,5 @@
 // canteenPage.dart
 import 'package:flutter/material.dart';
-import 'canteen.dart';
 
 class CanteenPage extends StatelessWidget {
   final List<Canteen> canteens = [

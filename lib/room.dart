@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:mfu_dorm/member.dart';
 
 class RoomPage extends StatefulWidget {
@@ -31,20 +31,19 @@ class _RoomPageState extends State<RoomPage> {
 
   Future<void> _fetchUserDetailsAndRoomMembers() async {
     try {
-      // Fetch user details to determine dormitory and room based on admin status
       DocumentSnapshot userSnapshot;
       if (widget.isAdmin) {
         userSnapshot = await FirebaseFirestore.instance
             .collection('admin')
             .doc(widget.userId)
-            .get(); // Fetch user details from admin collection if admin
+            .get();
       } else {
         userSnapshot = await FirebaseFirestore.instance
             .collection('user')
             .doc('userId')
             .collection('ID')
             .doc(widget.studentId)
-            .get(); // Fetch user details from user collection if student
+            .get();
       }
 
       if (userSnapshot.exists) {
@@ -52,17 +51,14 @@ class _RoomPageState extends State<RoomPage> {
         dormitory = userData?['dormitory'];
         roomNumber = userData?['room'];
 
-        // Fetch room members based on admin status
         QuerySnapshot membersSnapshot;
         if (widget.isAdmin) {
-          // Fetch from admin collection if user is an admin
           membersSnapshot = await FirebaseFirestore.instance
               .collection('admin')
               .where('dormitory', isEqualTo: dormitory)
               .where('room', isEqualTo: roomNumber)
               .get();
         } else {
-          // Fetch from user collection if user is a student
           membersSnapshot = await FirebaseFirestore.instance
               .collection('user')
               .doc('userId')
@@ -72,7 +68,6 @@ class _RoomPageState extends State<RoomPage> {
               .get();
         }
 
-        // Map the fetched members to a list
         List<Map<String, dynamic>> members = membersSnapshot.docs
             .map((doc) => doc.data() as Map<String, dynamic>)
             .toList();
@@ -98,60 +93,98 @@ class _RoomPageState extends State<RoomPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.amber[100],
-        title: const Text('Room Details'),
-        leading: const BackButton(color: Colors.black),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (dormitory != null && roomNumber != null) ...[
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      dormitory!,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppBar(
+                    backgroundColor: const Color.fromARGB(0, 255, 236, 179),
+                    title: const Text('My Room', style: TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
+                    leading: const BackButton(color: Colors.black),
+                    centerTitle: true,
+                  ), 
+                  if (dormitory != null && roomNumber != null) ...[
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            dormitory!,
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 255, 255, 255)),
+                          ),
+                          Text(
+                            'Room $roomNumber',
+                            style: const TextStyle(fontSize: 18, color: Color.fromARGB(255, 254, 254, 254)),
+                          ),
+                        ],
+                      ),
                     ),
-                    Text(
-                      'Room $roomNumber',
-                      style: const TextStyle(fontSize: 18),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Roommate',
+                      style: TextStyle(
+                        fontSize: 18, 
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 255, 255, 255),
+                      ),
                     ),
+                    const SizedBox(height: 10),
+                    // Remove unnecessary SizedBox or Padding widgets here
+                    Expanded(
+                      child: GridView.builder(
+                        padding: EdgeInsets.zero, // Ensures no padding within the GridView itself
+                        // ignore: prefer_const_constructors
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.5,
+                        ),
+                        itemCount: roomMembers.length,
+                        itemBuilder: (context, index) {
+                          final member = roomMembers[index];
+                          return MemberContainer(
+                            name: member['firstName'] ?? 'Unknown',
+                            onTap: () => _showMemberDetails(member),
+                          );
+                        },
+                      ),
+                    ),
+
+
+                  ] else ...[
+                    const Center(child: CircularProgressIndicator()),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Members',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.5,
-                  ),
-                  itemCount: roomMembers.length,
-                  itemBuilder: (context, index) {
-                    final member = roomMembers[index];
-                    return MemberContainer(
-                      name: member['firstName'] ?? 'Unknown',
-                      onTap: () => _showMemberDetails(member),
-                    );
-                  },
-                ),
-              ),
-            ] else ...[
-              const Center(child: CircularProgressIndicator()),
-            ],
-          ],
-        ),
+            ),
+          ),
+          // Positioned(
+          //   bottom: 20,
+          //   left: 0,
+          //   right: 0,
+          //   child: Opacity(
+          //     opacity: 0.5,
+          //     child: Center(
+          //       child: Image.asset(
+          //         'images/watermark.png',
+          //         width: 100,
+          //         fit: BoxFit.contain,
+          //       ),
+          //     ),
+          //   ),
+          // ),
+        ],
       ),
     );
   }
@@ -173,8 +206,8 @@ class MemberContainer extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.orange[300],
-          borderRadius: BorderRadius.circular(20),
+          color: const Color.fromARGB(255, 255, 255, 255),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: const [
             BoxShadow(
               color: Color(0x40000000),
@@ -187,7 +220,8 @@ class MemberContainer extends StatelessWidget {
         child: Center(
           child: Text(
             name,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF7EB4FF)),
+            textAlign: TextAlign.center,
           ),
         ),
       ),

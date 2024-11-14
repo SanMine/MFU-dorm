@@ -6,7 +6,6 @@ import 'login.dart'; // User LoginPage
 import 'qr.dart'; // QR code page
 import 'chat.dart'; // Chat page
 import 'noti.dart'; // Notifications page
-import 'map.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

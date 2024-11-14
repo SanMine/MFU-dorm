@@ -401,32 +401,37 @@ class _ServiceRequestPageState extends State<ServiceRequestPage> {
       });
     }
   }
+  Future<void> _refreshRequests() async {
+  setState(() {}); // Triggers a rebuild to fetch new data from Firestore
+}
 
   // Build the form selection layout
   Widget _buildFormSelection() {
-    return Expanded(
-      child: FutureBuilder<List<QueryDocumentSnapshot>>(
-        future: _fetchRequests(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No requests available.'));
-          } else {
-            return ListView.builder(
+  return Expanded(
+    child: FutureBuilder<List<QueryDocumentSnapshot>>(
+      future: _fetchRequests(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No requests available.'));
+        } else {
+          return RefreshIndicator(
+            onRefresh: _refreshRequests, // Call the refresh function here
+            child: ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
                 return _buildRequestCard(snapshot.data![index]);
               },
-            );
-          }
-        },
-      ),
-    );
-  }
-
+            ),
+          );
+        }
+      },
+    ),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

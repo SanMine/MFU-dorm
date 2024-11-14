@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:mfu_dorm/password.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -56,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
         // Fetch student data from Firestore
         DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection('user')
-            .doc('userId') // Use widget.userId here
+            .doc('userId') // Correctly reference user document
             .collection('ID')
             .doc(widget.studentId)
             .get();
@@ -72,86 +73,95 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showImageSelectionDialog() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Select Profile Image"),
-        content: SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Enable horizontal scrolling
-          child: Row(
-            children: profileImages.map((imagePath) {
-              return GestureDetector(
-                onTap: () {
-                  _selectProfileImage(imagePath);
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipOval( // Make image circular
-                    child: Image.asset(
-                      imagePath,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Select Profile Image"),
+          content: SingleChildScrollView(
+            scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+            child: Row(
+              children: profileImages.map((imagePath) {
+                return GestureDetector(
+                  onTap: () {
+                    _selectProfileImage(imagePath);
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipOval( // Make image circular
+                      child: Image.asset(
+                        imagePath,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            child: Text("Cancel"),
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // Function to handle image selection
   Future<void> _selectProfileImage(String imagePath) async {
-  try {
-    if (widget.isAdmin) {
-      // Update the Firestore document for admin
-      await FirebaseFirestore.instance
-          .collection('admin')
-          .doc(widget.userId) // Correctly reference admin document
-          .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
-    } else {
-      // Update the Firestore document for user
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc('userId') // Use widget.userId directly
-          .collection('ID')
-          .doc(widget.studentId)
-          .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
+    try {
+      if (widget.isAdmin) {
+        // Update the Firestore document for admin
+        await FirebaseFirestore.instance
+            .collection('admin')
+            .doc(widget.userId) // Correctly reference admin document
+            .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
+      } else {
+        // Update the Firestore document for user
+        await FirebaseFirestore.instance
+            .collection('user')
+            .doc('userId') // Use widget.userId directly
+            .collection('ID')
+            .doc(widget.studentId)
+            .set({'image': imagePath}, SetOptions(merge: true)); // Save image path in Firestore
+      }
+
+      setState(() {
+        profileImageUrl = imagePath; // Update the local image URL
+      });
+    } catch (e) {
+      print("Error updating profile image: $e");
     }
-
-    setState(() {
-      profileImageUrl = imagePath; // Update the local image URL
-    });
-  } catch (e) {
-    print("Error updating profile image: $e");
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('My Profile'),
+        centerTitle: true,
+        backgroundColor: Color(0xFF7EB4FF),
         leading: const BackButton(color: Colors.black),
       ),
-      body: widget.isAdmin ? _buildAdminProfile() : _buildUserProfile(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: widget.isAdmin ? _buildAdminProfile() : _buildUserProfile(),
+      ),
     );
   }
 
@@ -179,20 +189,80 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  '${userData!['firstName']} ${userData!['lastName']}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                Container(
+                  width: double.infinity, // Ensure the container stretches to full width
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15), // Rounded corners with a radius of 15
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black38,
+                        offset: Offset(0, 4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${userData!['firstName']} ${userData!['lastName']}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Student ID: ${userData!['id']}'),
+                      const SizedBox(height: 8),
+                      Text('Phone: ${userData!['phone']}'),
+                      const SizedBox(height: 8),
+                      Text('Email: ${userData!['email']}'),
+                      const SizedBox(height: 8),
+                      Text('Dormitory: ${userData!['dormitory']}'),
+                      const SizedBox(height: 8),
+                      Text('Room: ${userData!['room']}'),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text('Student ID: ${userData!['id']}'),
-                const SizedBox(height: 8),
-                Text('Phone: ${userData!['phone']}'),
-                const SizedBox(height: 8),
-                Text('Email: ${userData!['email']}'),
-                const SizedBox(height: 8),
-                Text('Dormitory: ${userData!['dormitory']}'),
-                const SizedBox(height: 8),
-                Text('Room: ${userData!['room']}'),
+                const SizedBox(height: 16),
+                // Change Password button in a container
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 255, 255, 255), // Background color for the container
+                    borderRadius: BorderRadius.circular(15), // Rounded corners
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        offset: Offset(0, 4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangePasswordPage(
+                            userId: widget.userId,
+                            studentId: widget.studentId,
+                            isAdmin: widget.isAdmin,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Change Password",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.blue, // Text color
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -222,16 +292,74 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  '${adminData!['firstName']} ${adminData!['lastName']}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black38,
+                        offset: Offset(0, 4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${adminData!['firstName']} ${adminData!['lastName']}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Admin ID: ${adminData!['id']}'),
+                      const SizedBox(height: 8),
+                      Text('Phone: ${adminData!['phone']}'),
+                      const SizedBox(height: 8),
+                      Text('Email: ${adminData!['email']}'),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text('Admin ID: ${adminData!['id']}'),
-                const SizedBox(height: 8),
-                Text('Phone: ${adminData!['phone']}'),
-                const SizedBox(height: 8),
-                Text('Email: ${adminData!['email']}'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50, // Background color for the container
+                    borderRadius: BorderRadius.circular(15), // Rounded corners
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        offset: Offset(0, 4),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangePasswordPage(
+                            userId: widget.userId,
+                            studentId: widget.studentId,
+                            isAdmin: widget.isAdmin,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Change Password",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.blue, 
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           );

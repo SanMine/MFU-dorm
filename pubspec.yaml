@@ -46,9 +46,16 @@ flutter:
   - images/M1.png
   - images/M3.png
   - images/dormbg.jpg
+  - images/dormbg1.jpg
+  - images/dormbg2.jpg
   - images/mfumap.png
   - images/canteenmap.jpg
   - images/mfu.jpeg
   - images/a1.jpg
   - images/a2.jpg
   - images/a3.png
+  - images/yes.png
+  - images/no.png
+  - images/list.png
+  - images/logo.png
+  - images/watermark.png

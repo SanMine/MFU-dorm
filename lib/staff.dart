@@ -87,19 +87,35 @@ class _StaffPageState extends State<StaffPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine the screen width and set crossAxisCount based on screen size
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth < 400 ? 1 : (screenWidth < 900 ? 2 : 3);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Staff Members"),
+        centerTitle: true,
+        backgroundColor: Color(0xFF7EB4FF),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              "$dormitory staff",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 255, 255, 255),
+              ),
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
@@ -129,67 +145,70 @@ class StaffContainer extends StatelessWidget {
   final Map<String, dynamic> member;
 
   const StaffContainer({
-    Key? key,
+    super.key,
     required this.member,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(
-        maxHeight: 150, // Reduced max height for a more compact layout
-      ),
-      decoration: BoxDecoration(
-        color: Colors.orange[300],
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 4,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Adjusted padding
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Name: ${member['firstName']} ${member['lastName']}",
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4), // Reduced spacing
-          Text(
-            "Contact No: ${member['phone'] ?? 'N/A'}",
-            style: const TextStyle(fontSize: 16),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Email: ${member['email'] ?? 'N/A'}",
-            style: const TextStyle(fontSize: 16),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Dormitory: ${member['dormitory'] ?? 'N/A'}",
-            style: const TextStyle(fontSize: 16),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Room: ${member['room'] ?? 'N/A'}",
-            style: const TextStyle(fontSize: 16),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0), // Padding around the container
+      child: Container(
+        constraints: const BoxConstraints(
+          maxWidth: 300, // Adjust maxWidth to control the width of each container
+        ),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 255, 255, 255),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x40000000),
+              blurRadius: 4,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20), // Padding inside the container
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Name: ${member['firstName']} ${member['lastName']}",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Contact No: ${member['phone'] ?? 'N/A'}",
+              style: const TextStyle(fontSize: 16),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Email: ${member['email'] ?? 'N/A'}",
+              style: const TextStyle(fontSize: 16),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Dormitory: ${member['dormitory'] ?? 'N/A'}",
+              style: const TextStyle(fontSize: 16),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Room: ${member['room'] ?? 'N/A'}",
+              style: const TextStyle(fontSize: 16),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

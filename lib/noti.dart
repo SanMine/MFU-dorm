@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 
@@ -186,6 +186,7 @@ class _NotiPageState extends State<NotiPage> {
           ? FloatingActionButton(
               onPressed: _showAddNotificationDialog,
               child: const Icon(Icons.add),
+              backgroundColor: Color.fromARGB(255, 245, 179, 226),
             )
           : null,
     );
@@ -202,7 +203,7 @@ class _NotiPageState extends State<NotiPage> {
           children: [
             const CircleAvatar(
               radius: 6,
-              backgroundColor: Colors.purple,
+              backgroundColor: Color.fromARGB(255, 244, 169, 224),
             ),
             const SizedBox(width: 10),
             Expanded(

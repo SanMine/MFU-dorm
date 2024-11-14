@@ -8,7 +8,6 @@ import 'menu.dart'; // Import your MenuPage
 import 'room.dart'; // Import your RoomPage
 import 'service.dart'; // Import your ServicePage
 import 'style.dart'; // Import your style.dart file
-import 'map.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int) onPageSelected; // Function to navigate
@@ -125,13 +124,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ),
       ),
       body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'images/dormbg.jpg',
-              fit: BoxFit.cover, // Makes the image cover the entire screen
-            ),
-          ),
+       children: [
+    Positioned.fill(
+      child: ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          Colors.black.withOpacity(0.0), 
+          BlendMode.srcOver, 
+        ),
+        child: Image.asset(
+          'images/dormbg.jpg',
+          fit: BoxFit.cover, 
+        ),
+      ),
+    ),
+
+        
           Padding(
             padding: const EdgeInsets.all(0.0),
             child: Column(

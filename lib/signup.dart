@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
   final String userId; // This is the userId for the current user.
@@ -106,7 +106,7 @@ class _SignupPageState extends State<SignupPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF7EB4FF), Color(0xFFA77AFF)],
+            colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -150,9 +150,9 @@ class _SignupPageState extends State<SignupPage> {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        child: Text(
+                        child: const Text(
                           'Already have an account? Login',
-                          style: TextStyle(color: Colors.white, fontSize: screenHeight * 0.02),
+                          style: TextStyle( color: Color.fromARGB(255, 112, 112, 112), fontSize: 13,),
                         ),
                       ),
                     ],
@@ -175,7 +175,7 @@ class _SignupPageState extends State<SignupPage> {
         labelStyle: const TextStyle(color: Colors.black54),
         prefixIcon: Icon(icon, color: Colors.black54),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
         filled: true,
@@ -186,19 +186,19 @@ class _SignupPageState extends State<SignupPage> {
 
   SizedBox _buildSignUpButton(double screenHeight, double screenWidth) {
     return SizedBox(
-      width: screenWidth * 0.6,
-      height: screenHeight * 0.07,
+    width: screenWidth * 0.5,
+    height: screenHeight * 0.07,
       child: ElevatedButton(
-        onPressed: _signup, // Call the _signup method
-        child: Text(
-          'Sign Up',
-          style: TextStyle(fontSize: screenHeight * 0.025),
-        ),
+        onPressed: _signup,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFA07AFF),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(15),
           ),
+        ), // Call the _signup method
+        child: Text(
+          'Sign Up',
+          style: TextStyle(fontSize: screenHeight * 0.025, color: Colors.white),
         ),
       ),
     );

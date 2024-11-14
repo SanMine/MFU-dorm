@@ -188,7 +188,7 @@ class _ScannerPageState extends State<ScannerPage> {
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               decoration: BoxDecoration(
                 color: isCheckIn ? Colors.blue : Colors.white,
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: Colors.blue),
               ),
               child: Text(
@@ -211,7 +211,7 @@ class _ScannerPageState extends State<ScannerPage> {
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               decoration: BoxDecoration(
                 color: !isCheckIn ? Colors.blue : Colors.white,
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: Colors.blue),
               ),
               child: Text(

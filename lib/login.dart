@@ -78,7 +78,7 @@ class LoginPageState extends State<LoginPage> {
             isAdmin = false;
             userId = userSnapshot.id;
             studentId = inputId;
-            _showSnackbar('Logged in as Student');
+            _showSnackbar('Logged in as Student',);
           } else {
             setState(() {
               _message = 'Invalid ID or password.';
@@ -100,6 +100,7 @@ class LoginPageState extends State<LoginPage> {
     } catch (e) {
       setState(() {
         _message = 'Input ID and password';
+        
       });
     } finally {
       setState(() {
@@ -111,7 +112,7 @@ class LoginPageState extends State<LoginPage> {
   // Function to show snackbar
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: Duration(seconds: 2)),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2),backgroundColor: const Color(0xFF7EB4FF),),
     );
   }
 
@@ -129,8 +130,7 @@ class LoginPageState extends State<LoginPage> {
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-             // colors: [Color(0xFF7EB4FF), Color(0xFFA77AFF)],
-             colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
+            colors: [Color(0xFF7EB4FF), Color.fromARGB(255, 255, 255, 255)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -141,14 +141,23 @@ class LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.05),
-                  Image.asset(
-                    'images/M3.png',
-                    height: screenHeight * 0.3, // Adjust height as needed
-                    width: screenWidth * 0.5,   // Adjust width as needed
-                  ),
-
                   SizedBox(height: screenHeight * 0.01),
+                  Image.asset(
+                    'images/logo.png',
+                    height: screenHeight * 0.2, // Adjust height as needed
+                    width: screenWidth * 0.4,   // Adjust width as needed
+                  ),
+                     SizedBox(height: screenHeight * 0.01),
+                   const Text(
+                      'Welcome to MFU Dormitory',
+                     style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 254, 254, 254)),
+                     
+                   ),
+
+                  SizedBox(height: screenHeight * 0.05),
+                  
+
+                   SizedBox(height: screenHeight * 0.01),
                   _buildTextField(
                     controller: _idController,
                     labelText: 'Student/Admin ID',
@@ -161,6 +170,24 @@ class LoginPageState extends State<LoginPage> {
                     icon: Icons.lock,
                     obscureText: true,
                   ),
+                   SizedBox(height: screenHeight * 0.01),
+                  InkWell(
+                  onTap: () {
+                    // Implement password recovery
+                  },
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: const Text(
+                      'Forgot your password?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color.fromARGB(255, 112, 112, 112),
+                       // fontSize: screenHeight * 0.02,
+                      ),
+                    ),
+                  ),
+                ),
+
                   SizedBox(height: screenHeight * 0.05),
                   _buildActionButton(
                     text: _isLoading ? 'Logging in...' : 'Login', 
@@ -193,18 +220,7 @@ class LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   SizedBox(height: screenHeight * 0.02),
-                  TextButton(
-                    onPressed: () {
-                      // Implement password recovery
-                    },
-                    child: Text(
-                      'Forgot your password?',
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 97, 121, 255),
-                        fontSize: screenHeight * 0.02,
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ),
