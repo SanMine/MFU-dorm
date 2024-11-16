@@ -285,7 +285,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 const List<Map<String, dynamic>> _features = [
   {'label': 'My Room', 'icon': Icons.bed_rounded},
   {'label': 'Map', 'icon': Icons.map},
-  {'label': 'Canteen', 'icon': Icons.restaurant},
+  {'label': 'Canteens', 'icon': Icons.restaurant},
   {'label': 'Services', 'icon': Icons.build},
   {'label': 'Rules', 'icon': Icons.rule},
   // Add other features as needed
