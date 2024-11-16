@@ -94,7 +94,7 @@ class _StaffPageState extends State<StaffPage> {
       appBar: AppBar(
         title: const Text("Staff Members"),
         centerTitle: true,
-        backgroundColor: Color(0xFF7EB4FF),
+        backgroundColor: const Color(0xFF7EB4FF),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -119,11 +119,11 @@ class _StaffPageState extends State<StaffPage> {
             const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount:  1,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 1.0, // Adjust aspect ratio for a more compact look
+                  childAspectRatio: 2.0, // Adjust aspect ratio for a more compact look
                 ),
                 itemCount: staffMembers.length,
                 itemBuilder: (context, index) {
