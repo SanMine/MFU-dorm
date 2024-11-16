@@ -406,32 +406,34 @@ class _ServiceRequestPageState extends State<ServiceRequestPage> {
 }
 
   // Build the form selection layout
-  Widget _buildFormSelection() {
+ Widget _buildFormSelection() {
   return Expanded(
-    child: FutureBuilder<List<QueryDocumentSnapshot>>(
-      future: _fetchRequests(),
+    child: StreamBuilder<QuerySnapshot>(
+      stream: widget.isAdmin
+          ? _serviceCollection?.snapshots() // Admin listens to all requests
+          : _serviceCollection
+              ?.where('studentId', isEqualTo: widget.studentId)
+              .snapshots(), // Students listen to their own requests
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(child: Text('No requests available.'));
         } else {
-          return RefreshIndicator(
-            onRefresh: _refreshRequests, // Call the refresh function here
-            child: ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                return _buildRequestCard(snapshot.data![index]);
-              },
-            ),
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              return _buildRequestCard(snapshot.data!.docs[index]);
+            },
           );
         }
       },
     ),
   );
 }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
