@@ -123,7 +123,7 @@ class _StaffPageState extends State<StaffPage> {
                   crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 2.0, // Adjust aspect ratio for a more compact look
+                  childAspectRatio: 1.0, // Adjust aspect ratio for a more compact look
                 ),
                 itemCount: staffMembers.length,
                 itemBuilder: (context, index) {
