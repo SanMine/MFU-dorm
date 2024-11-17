@@ -191,7 +191,7 @@ class LoginPageState extends State<LoginPage> {
                   SizedBox(height: screenHeight * 0.05),
                   _buildActionButton(
                     text: _isLoading ? 'Logging in...' : 'Login', 
-                    color: const Color.fromARGB(255, 111, 149, 255),
+                    color: const Color(0xFF6F95FF),
                     onPressed: _isLoading ? null : _login,
                   ),
                   SizedBox(height: screenHeight * 0.02),

@@ -107,7 +107,7 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: const Color.fromARGB(255, 0, 179, 255),
         items: [
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded, color: Colors.blue),
+            icon: Icon(Icons.home_rounded, color: Color(0xFF2196F3)),
             label: 'Home',
           ),
           if (widget.isAdmin) // Show scanner for admin

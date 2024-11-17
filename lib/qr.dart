@@ -133,7 +133,7 @@ class _QrPageState extends State<QrPage> {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: Colors.yellow[100],
+        color: const Color(0xFFFFF9C4),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
